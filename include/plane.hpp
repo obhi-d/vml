@@ -39,7 +39,7 @@ inline plane::scalar_type plane::dot(pref p, pref v) {
 	q         = _mm_mul_ps(q, p);
 	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
 	q         = _mm_add_ps(q, temp);
-	// x+z,x+z,x+z,y+w
+	// x+z[0]+z[0]+z[1]+w
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
 	// y+w, ??, ??, ??
 	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
@@ -48,7 +48,7 @@ inline plane::scalar_type plane::dot(pref p, pref v) {
 #endif
 	return quad::getx(q);
 #else
-	return p.x * v.x + p.y * v.y + p.z * v.z + p.w;
+	return p[0] * v[0] + p[1] * v[1] + p[2] * v[2] + p[3];
 #endif
 }
 

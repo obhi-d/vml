@@ -1,10 +1,7 @@
-
 #include "quad.hpp"
 
 namespace vml {
-
 struct vec3a : public quad {
-	using quad::scalar_type;
 	using quad::cref;
 	using quad::pref;
 	using quad::ref;
@@ -13,7 +10,6 @@ struct vec3a : public quad {
 	using quad::type;
 
 	using quad::mul;
-	
 
 	static inline type from_vec4(vec4_t p);
 	static inline type normalize(pref p);
@@ -32,7 +28,7 @@ inline vec3a::type type vec3a::from_vec4(vec4_t p) {
 
 	return _mm_and_ps(p, VML_CLEAR_W_VEC);
 #else
-	return quad::setw(p, 0);
+	return quad::set_w(p, 0);
 #endif
 }
 
@@ -56,11 +52,11 @@ inline vec3a::type vml::vec3a::normalize(pref vec) {
 #else
 	// Perform the dot product
 	type q = _mm_mul_ps(vec, vec);
-	// x=Dot[1], y=Dot[2]
+	// x=dot[1], y=dot[2]
 	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 1, 2, 1));
 	// Result[0] = x+y
 	q = _mm_add_ss(q, temp);
-	// x=Dot[2]
+	// x=dot[2]
 	temp = _mm_shuffle_ps(temp, temp, _MM_SHUFFLE(1, 1, 1, 1));
 	// Result[0] = (x+y)+z
 	q = _mm_add_ss(q, temp);
@@ -97,11 +93,11 @@ inline vec3a::type vec3a::vdot(pref vec1, pref vec2) {
 #else
 	// Perform the dot product
 	type q = _mm_mul_ps(vec, vec);
-	// x=Dot[1], y=Dot[2]
+	// x=dot[1], y=dot[2]
 	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 1, 2, 1));
 	// Result[0] = x+y
 	q = _mm_add_ss(q, temp);
-	// x=Dot[2]
+	// x=dot[2]
 	temp = _mm_shuffle_ps(temp, temp, _MM_SHUFFLE(1, 1, 1, 1));
 	// Result[0] = (x+y)+z
 	return _mm_add_ss(q, temp);
@@ -130,7 +126,7 @@ inline vec3a::type vec3a::cross(pref q1, pref q2) {
 	// Subract the right from
 	// left, and return answer
 	vResult = _mm_sub_ps(vResult, vTemp1);
-	// Set w to zero
+	// set w to zero
 	return _mm_and_ps(vResult, VML_CLEAR_W_VEC);
 #else
 	return set(vec1[1] * vec2[2] - vec1[2] * vec2[1],
@@ -141,7 +137,7 @@ inline vec3a::type vec3a::cross(pref q1, pref q2) {
 }
 
 inline bool vec3a::greater_all(pref q1, pref q2) {
-#if L_VECTOR_MATH_TYPE_IS_SSE
+#if VML_USE_SSE_AVX
 	return ((_mm_movemask_ps(_mm_cmpgt_ps(q1, q2)) & 0x7) == 0x7);
 #else
 	return (q1[0] > q2[0] && q1[1] > q2[1] && q1[2] > q2[2]) != 0;
@@ -149,7 +145,7 @@ inline bool vec3a::greater_all(pref q1, pref q2) {
 }
 
 inline bool vec3a::greater_any(pref q1, pref q2) {
-#if L_VECTOR_MATH_TYPE_IS_SSE
+#if VML_USE_SSE_AVX
 	return ((_mm_movemask_ps(_mm_cmpgt_ps(q1, q2))) & 0x7) != 0;
 #else
 	return (q1[0] > q2[0] || q1[1] > q2[1] || q1[2] > q2[2]) != 0;
@@ -161,7 +157,7 @@ inline bool vec3a::lesser_all(pref q1, pref q2) { return greater_any(q2, q1); }
 inline bool vec3a::lesser_any(pref q1, pref q2) { return greater_all(q2, q1); }
 
 inline vec3a::tye vec3a::mul(pref q1, mat4_t const& m) {
-#if L_VECTOR_MATH_TYPE_IS_SSE
+#if VML_USE_SSE_AVX
 	type ret;
 	ret        = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
 	ret        = _mm_mul_ps(ret, m[0]);
@@ -187,5 +183,4 @@ inline vec3a::tye vec3a::mul(pref q1, mat4_t const& m) {
 	return r;
 #endif
 }
-
 } // namespace vml

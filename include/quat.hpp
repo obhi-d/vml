@@ -24,17 +24,17 @@ struct quat : public quad {
 	static inline type inverse(pref q);
 };
 
-inline quat::type quat::identity() { return Set(0, 0, 0, 1); }
+inline quat::type quat::identity() { return set(0, 0, 0, 1); }
 inline type quat::from_axis_angle(vec3_t const& v, scalar_type ang) {
-#if L_CORE_DEBUG_CHECKS == 1 float len = Vec3Op::Length(axis);
+#if L_CORE_DEBUG_CHECKS == 1 float len = Vec3Op::length(axis);
 	L_ASSERT(L_FLOAT_TOLERANCE_EQUAL(len, 1, Math::kEpsilonMed));
 #endif
 	float f, c;
 	Math::SinCos(ang * .5f, f, c);
-	return Set(f * axis.x, f * axis.y, f * axis.z, c);
+	return set(f * axis[0], f * axis[1], f * axis[2], c);
 }
 inline type quat::from_axis_angle(axis_angle_t const& v) {
-#if L_VECTOR_MATH_TYPE_IS_SSE
+#if VML_USE_SSE_AVX
 #if L_CORE_DEBUG_CHECKS == 1
 	float len = 1; //\todo Find length of axis
 	L_ASSERT(L_FLOAT_TOLERANCE_EQUAL(len, 1, Math::kEpsilonMed));
@@ -44,12 +44,12 @@ inline type quat::from_axis_angle(axis_angle_t const& v) {
 
 	float f, c;
 	Math::SinCos(QuatOp::GetW(axis) * .5f, f, c);
-	V_Quad vSineCosine = QuadOp::Set(f, f, f, c);
+	V_Quad vSineCosine = QuadOp::set(f, f, f, c);
 	return _mm_mul_ps(N, vSineCosine);
 #else
 	float s, c;
-	Math::SinCos(axis.w * .5f, s, c);
-	return Set(s * axis.x, s * axis.y, s * axis.z, c);
+	Math::SinCos(axis[3] * .5f, s, c);
+	return set(s * axis[0], s * axis[1], s * axis[2], c);
 #endif
 }
 inline type quat::from_mat4(mat4_t const& m) {
@@ -60,7 +60,7 @@ inline type quat::from_mat3(mat3_t const& m) {
 	float maxdiag, trace;
 	trace = m.m00 + m.m11 + m.m22 + 1.0f;
 	if (trace > 0.0f) {
-		return Set((m.m12 - m.m21) / (2.0f * sqrt(trace)),
+		return set((m.m12 - m.m21) / (2.0f * sqrt(trace)),
 		           (m.m20 - m.m02) / (2.0f * sqrt(trace)),
 		           (m.m01 - m.m10) / (2.0f * sqrt(trace)), sqrt(trace) / 2.0f);
 	}
@@ -82,24 +82,24 @@ inline type quat::from_mat3(mat3_t const& m) {
 	case 0:
 		s    = 2.0f * sqrt(1.0f + m.m00 - m.m11 - m.m22);
 		invS = 1 / s;
-		return Set(0.25f * s, (m.m01 + m.m10) * invS, (m.m02 + m.m20) * invS,
+		return set(0.25f * s, (m.m01 + m.m10) * invS, (m.m02 + m.m20) * invS,
 		           (m.m12 - m.m21) * invS);
 
 	case 1:
 		s    = 2.0f * sqrt(1.0f + m.m11 - m.m00 - m.m22);
 		invS = 1 / s;
-		return Set((m.m01 + m.m10) * invS, 0.25f * s, (m.m12 + m.m21) * invS,
+		return set((m.m01 + m.m10) * invS, 0.25f * s, (m.m12 + m.m21) * invS,
 		           (m.m20 - m.m02) * invS);
 	case 2:
 	default:
 		s    = 2.0f * sqrt(1.0f + m.m22 - m.m00 - m.m11);
 		invS = 1 / s;
-		return Set((m.m02 + m.m20) * invS, (m.m12 + m.m21) * invS, 0.25f * s,
+		return set((m.m02 + m.m20) * invS, (m.m12 + m.m21) * invS, 0.25f * s,
 		           (m.m01 - m.m10) * invS);
 	}
 }
 inline type quat::mul(pref q1, pref q2) {
-#if L_VECTOR_MATH_TYPE_IS_SSE
+#if VML_USE_SSE_AVX
 	// Copy to SSE registers and use as few as possible for x86
 	type Q2X     = q2;
 	type Q2Y     = q2;
@@ -115,17 +115,17 @@ inline type quat::mul(pref q1, pref q2) {
 	Quad Q1Shuffle = q1;
 	// Shuffle the copies of q1
 	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(0, 1, 2, 3));
-	// Mul by Q1WZYX
+	// mul by Q1WZYX
 	Q2X       = _mm_mul_ps(Q2X, Q1Shuffle);
 	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(2, 3, 0, 1));
 	// Flip the signs on y and z
 	Q2X = _mm_xor_ps(Q2X, (N3D_OXOX.v));
-	// Mul by Q1ZWXY
+	// mul by Q1ZWXY
 	Q2Y       = _mm_mul_ps(Q2Y, Q1Shuffle);
 	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(0, 1, 2, 3));
 	// Flip the signs on z and w
 	Q2Y = _mm_xor_ps(Q2Y, (N3D_OOXX.v));
-	// Mul by Q1YXWZ
+	// mul by Q1YXWZ
 	Q2Z     = _mm_mul_ps(Q2Z, Q1Shuffle);
 	vResult = _mm_add_ps(vResult, Q2X);
 	// Flip the signs on x and w
@@ -134,28 +134,28 @@ inline type quat::mul(pref q1, pref q2) {
 	vResult = _mm_add_ps(vResult, Q2Y);
 	return vResult;
 #else
-	return Set((q2.w * q1.x) + (q2.x * q1.w) + (q2.y * q1.z) - (q2.z * q1.y),
-	           (q2.w * q1.y) - (q2.x * q1.z) + (q2.y * q1.w) + (q2.z * q1.x),
-	           (q2.w * q1.z) + (q2.x * q1.y) - (q2.y * q1.x) + (q2.z * q1.w),
-	           (q2.w * q1.w) - (q2.x * q1.x) - (q2.y * q1.y) - (q2.z * q1.z));
+	return set((q2[3] * q1[0]) + (q2[0] * q1[3]) + (q2[1] * q1[2]) - (q2[2] * q1[1]),
+	           (q2[3] * q1[1]) - (q2[0] * q1[2]) + (q2[1] * q1[3]) + (q2[2] * q1[0]),
+	           (q2[3] * q1[2]) + (q2[0] * q1[1]) - (q2[1] * q1[0]) + (q2[2] * q1[3]),
+	           (q2[3] * q1[3]) - (q2[0] * q1[0]) - (q2[1] * q1[1]) - (q2[2] * q1[2]));
 #endif
 }
 inline vec3a_t quat::transform(pref q1, vec3a_t const& q2) {
-	TraitsVec3A::type uv  = Vec3AOp::Cross(q, v);
-	TraitsVec3A::type uuv = Vec3AOp::Cross(q, uv);
-	return Vec3AOp::Add(Vec3AOp::Add(v, QuadOp::Mul(uv, 2 * QuatOp::GetW(q))),
-	                    Vec3AOp::Add(uuv, uuv));
+	vec3a_t uv  = vec3a::Cross(q, v);
+	vec3a_t uuv = vec3a::Cross(q, uv);
+	return vec3a::add(vec3a::add(v, QuadOp::mul(uv, 2 * QuatOp::GetW(q))),
+	                    vec3a::add(uuv, uuv));
 }
 inline vec3a_t quat::transform_bounds(pref q1, vec3a_t const& extends) {
-	Vector3A uv  = Vec3AOp::Cross(q, v);
-	Vector3A uuv = Vec3AOp::Cross(q, uv);
-	return Vec3AOp::Add(
-	    Vec3AOp::Add(v, Vec3AOp::Abs(QuadOp::Mul(uv, 2 * QuatOp::GetW(q)))),
-	    Vec3AOp::Abs(Vec3AOp::Add(uuv, uuv)));
+	Vector3A uv  = vec3a::Cross(q, v);
+	Vector3A uuv = vec3a::Cross(q, uv);
+	return vec3a::add(
+	    vec3a::add(v, vec3a::Abs(QuadOp::mul(uv, 2 * QuatOp::GetW(q)))),
+	    vec3a::Abs(vec3a::add(uuv, uuv)));
 }
 inline type quat::slerp(pref q1, pref q2, scalar_type t) {
 	float cosom, absCosom, sinom, omega, scale0, scale1;
-	cosom    = Vec4Op::Dot(from, to);
+	cosom    = Vec4Op::dot(from, to);
 	absCosom = Math::Abs(cosom);
 	if ((1.0f - absCosom) > Math::kEpsilon) {
 		omega  = Math::ArcCos(absCosom);
@@ -168,13 +168,13 @@ inline type quat::slerp(pref q1, pref q2, scalar_type t) {
 	}
 
 	scale1 = (cosom >= 0.0f) ? scale1 : -scale1;
-	return QuadOp::Add(QuadOp::Mul(from, scale0), QuadOp::Mul(to, scale1));
+	return QuadOp::add(QuadOp::mul(from, scale0), QuadOp::mul(to, scale1));
 }
 inline type quat::lerp(pref q1, pref q2, scalar_type t) { return type(); }
 inline type quat::inverse(pref q) {
-#if L_VECTOR_MATH_TYPE_IS_SSE 
+#if VML_USE_SSE_AVX 
 	return _mm_xor_ps(q, N3D_OXXX.v);
 #else
-	return Set(-q.x, -q.y, -q.z, q.w);
+	return set(-q[0], -q[1], -q[2], q[3]);
 }
 } // namespace vml

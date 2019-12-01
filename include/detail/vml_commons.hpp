@@ -1,6 +1,5 @@
 #pragma once
 
-
 #if defined(_MSC_VER)
 #define VML_EXPORT __declspec(dllexport)
 #define VML_IMPORT __declspec(dllimport)
@@ -19,8 +18,7 @@
 #define VML_API
 #endif
 
-
-#if VML_USE_SSE_AVX 
+#if VML_USE_SSE_AVX
 #include <emmintrin.h>
 #include <smmintrin.h>
 #include <xmmintrin.h>
@@ -33,10 +31,10 @@
 #define vml_cast_v_to_i(v) (__m128i)(v)
 #endif
 
-
 #define VML_CLEAR_W_VEC                                                        \
 	vml_cast_i_to_v(_mm_set_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000))
 #define VML_XYZ0_W1_VEC vml_cast_i_to_v(_mm_set_epi32(0, 0, 0, 1))
+#define VML_CLEAR_XYZ_VEC vml_cast_i_to_v(_mm_set_epi32(0, 0, 0, 0xFFFFFFFF))
 
 #endif
 
@@ -49,5 +47,4 @@
 #include <cstdint>
 #include <limits>
 
-namespace vml {
-}
+namespace vml {}

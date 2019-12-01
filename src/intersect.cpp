@@ -1,33 +1,35 @@
 #include <intersect.hpp>
+#include <vec3a.hpp>
 
 namespace vml {
 namespace intersect {
-VML_API result_t BoundingVolumes(const BoundingVolume& vol1,
-                                 const BoundingVolume& vol2) {
-	Vec3A::type d = Vec3A::Sub(vol1.GetCenter(), vol2.GetCenter());
-	float dist    = Vec3A::Dot(d, d);
+VML_API result_t bounding_volumes(bounding_volume_t const& vol1,
+                                  bounding_volume_t const& vol2) {
+	vec3a::type d = vec3a::sub(vol1.center(), vol2.center());
+	float dist    = vec3a::dot(d, d);
 	float rad     = vol1.GetRadius() + vol2.GetRadius();
 	if (dist > rad * rad)
 		return result_t::k_outside;
 	else
-		return (Vec3A::GreaterAny(Vec3A::Abs(d),
-		                          Vec3A::Add(vol1.GetExtends(), vol2.GetExtends())))
+		return (vec3a::GreaterAny(vec3a::Abs(d),
+		                          vec3a::add(vol1.GetExtends(), vol2.GetExtends())))
 		           ? result_t::k_outside
 		           : result_t::k_outside;
 }
 
-VML_API result_t BoundingVolumeFrustumCoherent(const BoundingVolume& vol,
-                                               const Frustum& frustum,
-                                               uint32 inMask, uint32& outMask,
-                                               uint32& lastPlane) {
-	uint32 i, k = 1 << lastPlane;
+VML_API result_t bounding_volume_frustum_coherent(bounding_volume_t const& vol,
+                                                  frustum const& frustum,
+                                                  std::uint32_t i_mask,
+                                                  std::uint32_t& outMask,
+                                                  std::uint32_t& o_last_plane) {
+	std::uint32_t i, k = 1 << o_last_plane;
 	result_t result_t         = result_t::k_inside;
-	const Plane::type* planes = frustum.GetPlanes();
+	const plane::type* planes = frustum.GetPlanes();
 	outMask                   = 0;
-	if (k & inMask) {
-		float m             = Plane::Dot(planes[lastPlane], vol.GetExtends());
-		Vec3A::type absNorm = Plane::AbsNormal(planes[lastPlane]);
-		float n             = Vec3A::Dot(absNorm, vol.GetExtends());
+	if (k & i_mask) {
+		float m             = plane::dot(planes[o_last_plane], vol.GetExtends());
+		vec3a::type absNorm = plane::AbsNormal(planes[o_last_plane]);
+		float n             = vec3a::dot(absNorm, vol.GetExtends());
 
 		if (m + n < 0)
 			return result_t::k_outside;
@@ -37,15 +39,15 @@ VML_API result_t BoundingVolumeFrustumCoherent(const BoundingVolume& vol,
 		}
 	}
 
-	uint32 numPlanes = (uint32)frustum.Size();
+	std::uint32_t numPlanes = (std::uint32_t)frustum.Size();
 	for (i = 0, k = 1; i < numPlanes; i++, k += k) {
-		if ((i != lastPlane) && (k & inMask)) {
-			float m             = Plane::Dot(planes[i], vol.GetExtends());
-			Vec3A::type absNorm = Plane::AbsNormal(planes[i]);
-			float n             = Vec3A::Dot(absNorm, vol.GetExtends());
+		if ((i != o_last_plane) && (k & i_mask)) {
+			float m             = plane::dot(planes[i], vol.GetExtends());
+			vec3a::type absNorm = plane::AbsNormal(planes[i]);
+			float n             = vec3a::dot(absNorm, vol.GetExtends());
 
 			if (m + n < 0) {
-				lastPlane = i;
+				o_last_plane = i;
 				return result_t::k_outside;
 			}
 			if (m - n < 0) {
@@ -57,15 +59,15 @@ VML_API result_t BoundingVolumeFrustumCoherent(const BoundingVolume& vol,
 	return result_t;
 }
 
-VML_API result_t BoundingVolumeFrustum(const BoundingVolume& vol,
-                                       const Frustum& frustum) {
+VML_API result_t BoundingVolumeFrustum(bounding_volume_t const& vol,
+                                       frustum const& frustum) {
 	result_t result_t         = result_t::k_inside;
 	size_t numPlanes          = frustum.Size();
-	const Plane::type* planes = frustum.GetPlanes();
+	const plane::type* planes = frustum.GetPlanes();
 	for (size_t i = 0; i < numPlanes; ++i) {
-		float m             = Plane::Dot(planes[i], vol.GetExtends());
-		Vec3A::type absNorm = Plane::AbsNormal(planes[i]);
-		float n             = Vec3A::Dot(absNorm, vol.GetExtends());
+		float m             = plane::dot(planes[i], vol.GetExtends());
+		vec3a::type absNorm = plane::AbsNormal(planes[i]);
+		float n             = vec3a::dot(absNorm, vol.GetExtends());
 
 		if (m + n < 0)
 			return result_t::k_outside;
@@ -75,12 +77,12 @@ VML_API result_t BoundingVolumeFrustum(const BoundingVolume& vol,
 	return result_t;
 }
 
-VML_API result_t BoundingSphereFrustum(Vec3A::pref center, float radius,
-                                       const Frustum& frustum) {
+VML_API result_t bounding_sphere_frustum(vec3a::pref center, float radius,
+                                         frustum const& frustum) {
 	size_t numPlanes          = frustum.Size();
-	const Plane::type* planes = frustum.GetPlanes();
+	const plane::type* planes = frustum.GetPlanes();
 	for (size_t i = 0; i < numPlanes; ++i) {
-		float c = Plane::Dot(planes[i], center);
+		float c = plane::dot(planes[i], center);
 		if (c > radius)
 			return result_t::k_outside;
 		if (c > -radius)

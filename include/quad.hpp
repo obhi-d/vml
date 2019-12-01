@@ -4,15 +4,13 @@
 #include "real.hpp"
 
 namespace vml {
-
 struct quad {
-
-	using type      = types::quad_t<float>;
-	using ref       = type&;
-	using pref      = std::conditional_t<types::is_pref_cref, type const&, type>;
-	using cref      = type const&;
+	using type = types::quad_t<float>;
+	using ref  = type&;
+	using pref = std::conditional_t<types::is_pref_cref, type const&, type>;
+	using cref = type const&;
 	using scalar_type = float;
-	using row_type  = float;
+	using row_type    = float;
 	using scalar_type = float;
 
 	enum { element_count = 4 };
@@ -24,13 +22,14 @@ struct quad {
 	static inline type isinfv(pref v);
 	static inline type set(scalar_type v);
 	static inline type set(scalar_type x, scalar_type y, scalar_type z);
-	static inline type set(scalar_type x, scalar_type y, scalar_type z, scalar_type w);
+	static inline type set(scalar_type x, scalar_type y, scalar_type z,
+	                       scalar_type w);
 	static inline type set(scalar_type const* v);
 	static inline type set_unaligned(scalar_type const* v);
-	static inline type setx(pref v, scalar_type x);
-	static inline type sety(pref v, scalar_type y);
-	static inline type setz(pref v, scalar_type z);
-	static inline type setw(pref v, scalar_type w);
+	static inline type set_x(pref v, scalar_type x);
+	static inline type set_y(pref v, scalar_type y);
+	static inline type set_z(pref v, scalar_type z);
+	static inline type set_w(pref v, scalar_type w);
 	static inline scalar_type x(pref v);
 	static inline scalar_type y(pref v);
 	static inline scalar_type z(pref v);
@@ -201,7 +200,7 @@ inline quad::scalar_type quad::w(quad::pref q) {
 #endif
 }
 
-inline quad::type quad::setx(quad::pref q, scalar_type val) {
+inline quad::type quad::set_x(quad::pref q, scalar_type val) {
 #if VML_USE_SSE_AVX
 	type v = _mm_set_ss(val);
 	return _mm_move_ss(q, v);
@@ -210,7 +209,7 @@ inline quad::type quad::setx(quad::pref q, scalar_type val) {
 #endif
 }
 
-inline quad::type quad::sety(quad::pref q, scalar_type val) {
+inline quad::type quad::set_y(quad::pref q, scalar_type val) {
 #if VML_USE_SSE_AVX
 #ifdef _MSC_VER
 	type res;
@@ -232,7 +231,7 @@ inline quad::type quad::sety(quad::pref q, scalar_type val) {
 #endif
 }
 
-inline quad::type quad::setz(quad::pref q, scalar_type val) {
+inline quad::type quad::set_z(quad::pref q, scalar_type val) {
 #if VML_USE_SSE_AVX
 #ifdef _MSC_VER
 	type res;
@@ -254,7 +253,7 @@ inline quad::type quad::setz(quad::pref q, scalar_type val) {
 #endif
 }
 
-inline quad::type quad::setw(quad::pref q, scalar_type val) {
+inline quad::type quad::set_w(quad::pref q, scalar_type val) {
 #if VML_USE_SSE_AVX
 #ifdef _MSC_VER
 	type res;
@@ -431,7 +430,7 @@ inline quad::scalar_type quad::hadd(quad::pref v) {
 	type q    = v;
 	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
 	q         = _mm_add_ps(q, temp);
-	// x+z,x+z,x+z,y+w
+	// x+z[0]+z[0]+z[1]+w
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
 	// y+w, ??, ??, ??
 	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
@@ -491,7 +490,7 @@ inline quad::type quad::vdot(quad::pref vec1, quad::pref vec2) {
 	type q    = _mm_mul_ps(vec1, vec2);
 	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
 	q         = _mm_add_ps(q, temp);
-	// x+z,x+z,x+z,y+w
+	// x+z[0]+z[0]+z[1]+w
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
 	// y+w, ??, ??, ??
 	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
@@ -531,7 +530,7 @@ inline quad::type quad::normalize(quad::pref vec) {
 	type q    = _mm_mul_ps(vec, vec);
 	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
 	q         = _mm_add_ps(q, temp);
-	// x+z,x+z,x+z,y+w
+	// x+z[0]+z[0]+z[1]+w
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
 	// y+w, ??, ??, ??
 	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));

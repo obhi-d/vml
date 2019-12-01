@@ -4,7 +4,12 @@
 #include "plane.hpp"
 
 namespace vml {
-struct frustum {
+struct frustum_t {
+	struct coherency {
+		std::uint32_t mask;
+		std::uint32_t plane;
+	};
+
 	// common frustums will have these planes
 	enum plane_type {
 		k_near,
@@ -15,64 +20,62 @@ struct frustum {
 		k_bottom,
 	};
 
-	enum {
-		k_fixed_plane_count = 6
-	};
+	enum { k_fixed_plane_count = 6 };
 
-	Frustum() : size(0) {}
-	Frustum(const Frustum& iOther) : size(iOther.size) {
+	frustum_t() : size(0) {}
+	frustum_t(frustum_tconst& iOther) : size(iOther.size) {
 		if (size < kFixedPlaneCount && size > 0) {
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				frustum[i] = iOther.frustum[i];
 		} else {
 			planes = new vPlane[size];
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				planes[i] = iOther.planes[i];
 		}
 	}
-	Frustum(Frustum&& iOther) : size(iOther.size) {
+	frustum_t(frustum_t&& iOther) : size(iOther.size) {
 		if (size < kFixedPlaneCount && size > 0) {
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				frustum[i] = iOther.frustum[i];
 		} else {
 			planes        = iOther.planes;
 			iOther.planes = nullptr;
 		}
 	}
-	Frustum(const vPlane* iPlanes, uint32 iSize) : size(iSize) {
+	frustum_t(const vPlane* iPlanes, std::uint32_t iSize) : size(iSize) {
 		if (size < kFixedPlaneCount && size > 0) {
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				frustum[i] = iPlanes[i];
 		} else {
 			planes = new vPlane[size];
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				planes[i] = iPlanes[i];
 		}
 	}
-	~Frustum();
+	~frustum_t();
 
-	inline Frustum& operator=(const Frustum& iOther) {
+	inline frustum_t& operator=(frustum_tconst& iOther) {
 		if (size > kFixedPlaneCount && planes)
 			delete[] planes;
 
 		size = iOther.size;
 		if (size < kFixedPlaneCount && size > 0) {
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				frustum[i] = iOther.frustum[i];
 		} else {
 			planes = new vPlane[size];
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				planes[i] = iOther.planes[i];
 		}
 		return *this;
 	}
 
-	inline Frustum& operator=(Frustum&& iOther) {
+	inline frustum_t& operator=(frustum_t&& iOther) {
 		if (size > kFixedPlaneCount && planes)
 			delete[] planes;
 		size = iOther.size;
 		if (size < kFixedPlaneCount && size > 0) {
-			for (uint32 i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < size; ++i)
 				frustum[i] = iOther.frustum[i];
 		} else {
 			planes        = iOther.planes;
@@ -81,7 +84,7 @@ struct frustum {
 		return *this;
 	}
 
-	inline uint32 Size() const { return size; }
+	inline std::uint32_t Size() const { return size; }
 
 	inline vPlane GetPlane(size_t i) const {
 		L_ASSERT(i < size);
@@ -102,9 +105,9 @@ struct frustum {
 	void ConstructFrom(const vMat4& mat);
 
 	const vPlane* GetPlanes() const {
-		return (size > kFixedPlaneCount) ? frustum : planes;
+		return (size > kFixedPlaneCount) ? frustum_t : planes;
 	}
-	vPlane* GetPlanes() { return (size > kFixedPlaneCount) ? frustum : planes; }
+	vPlane* GetPlanes() { return (size > kFixedPlaneCount) ? frustum_t : planes; }
 
 	transform const& local);
 	union {
@@ -112,6 +115,6 @@ struct frustum {
 		plane_t* ex_planes;
 	};
 	// if size <= 6, we use frustum, otherwise we use planes
-	uint32 size;
+	std::uint32_t size;
 };
 } // namespace vml
