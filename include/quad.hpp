@@ -1,0 +1,572 @@
+#pragma once
+
+#include "detail/deduced_types.hpp"
+#include "real.hpp"
+
+namespace vml {
+
+struct quad {
+
+	using type      = types::quad_t<float>;
+	using ref       = type&;
+	using pref      = std::conditional_t<types::is_pref_cref, type const&, type>;
+	using cref      = type const&;
+	using scalar_type = float;
+	using row_type  = float;
+	using scalar_type = float;
+
+	enum { element_count = 4 };
+
+	static inline bool equals(quad::pref v1, quad::pref v2);
+	static inline bool isnan(pref v);
+	static inline bool isinf(pref v);
+	static inline type isnanv(pref v);
+	static inline type isinfv(pref v);
+	static inline type set(scalar_type v);
+	static inline type set(scalar_type x, scalar_type y, scalar_type z);
+	static inline type set(scalar_type x, scalar_type y, scalar_type z, scalar_type w);
+	static inline type set(scalar_type const* v);
+	static inline type set_unaligned(scalar_type const* v);
+	static inline type setx(pref v, scalar_type x);
+	static inline type sety(pref v, scalar_type y);
+	static inline type setz(pref v, scalar_type z);
+	static inline type setw(pref v, scalar_type w);
+	static inline scalar_type x(pref v);
+	static inline scalar_type y(pref v);
+	static inline scalar_type z(pref v);
+	static inline scalar_type w(pref v);
+	static inline type zero();
+	static inline type splat_x(pref v);
+	static inline type splat_y(pref v);
+	static inline type splat_z(pref v);
+	static inline type splat_w(pref v);
+	static inline type select(pref v1, pref v2, pref control);
+	static inline scalar_type get(pref v, std::uint32_t i);
+	static inline type abs(pref v);
+	static inline type negate(pref v);
+	static inline type add(pref a, pref b);
+	static inline type sub(pref a, pref b);
+	static inline type mul(pref a, pref b);
+	static inline type mul(pref a, scalar_type b);
+	static inline type mul(scalar_type b, pref a);
+	static inline type half(pref a);
+	static inline type div(pref a, pref b);
+	static inline type madd(pref v, pref m, pref a);
+	static inline scalar_type hadd(pref q1);
+	static inline bool greater_all(pref q1, pref q2);
+	static inline bool greater_any(pref q1, pref q2);
+	static inline bool lesser_all(pref q1, pref q2);
+	static inline bool lesser_any(pref q1, pref q2);
+	static inline type vdot(pref q1, pref q2);
+	static inline scalar_type dot(pref q1, pref q2);
+	static inline scalar_type sqlength(pref c1);
+	static inline scalar_type length(pref c1);
+	static inline scalar_type distance(pref vec1, pref vec2);
+	static inline scalar_type sqdistance(pref vec1, pref vec2);
+	static inline type normalize(pref v);
+	static inline type lerp(pref src, pref dest, scalar_type t);
+	static inline type recip_sqrt(pref qpf);
+};
+
+inline bool quad::equals(quad::pref v1, quad::pref v2) {
+	type r = quad::sub(v1, v2);
+	return (bool)(real::equals(quad::x(r), 0) && real::equals(quad::y(r), 0) &&
+	              real::equals(quad::z(r), 0) && real::equals(quad::w(r), 0));
+}
+
+inline bool quad::isnan(quad::pref v) {
+	return quad::hadd(quad::isnanv(v)) != 0;
+}
+
+inline bool quad::isinf(quad::pref v) {
+	return quad::hadd(quad::isinfv(v)) != 0;
+}
+
+inline quad::type quad::isnanv(quad::pref v) {
+#if VML_USE_SSE_AVX
+	return _mm_cmpneq_ps(v, v);
+#else
+	return quad::set(v[0] != v[0], v[1] != v[1], v[2] != v[2], v[3] != v[3]);
+#endif
+}
+
+inline quad::type quad::isinfv(quad::pref v) {
+#if VML_USE_SSE_AVX
+	// Mask off the sign bit
+	type vtemp =
+	    _mm_and_ps(v, vml_cast_i_to_v(_mm_set_epi32(0x7fffffff, 0x7fffffff,
+	                                                0x7fffffff, 0x7fffffff)));
+	// Compare to infinity
+	vtemp =
+	    _mm_cmpeq_ps(vtemp, vml_cast_i_to_v(_mm_set_epi32(
+	                            0x7F800000, 0x7F800000, 0x7F800000, 0x7F800000)));
+	// If any are infinity, the signs are true.
+	return vtemp;
+
+#else
+	return quad::set(real::isinf(v[0]), real::isinf(v[1]), real::isinf(v[2]),
+	                 real::isinf(v[3]));
+#endif
+}
+
+inline quad::type quad::set(scalar_type v) {
+#if VML_USE_SSE_AVX
+	return _mm_set_ps1(v);
+#else
+	return {v, v, v, v};
+#endif
+}
+
+inline quad::type quad::set(const scalar_type* v) {
+#if VML_USE_SSE_AVX
+	return _mm_load_ps(v);
+#else
+	return {v[0], v[1], v[2], v[3]};
+#endif
+}
+
+inline quad::type quad::set(scalar_type x, scalar_type y, scalar_type z) {
+	return set(x, y, z, 0);
+}
+
+inline quad::type quad::set(scalar_type x, scalar_type y, scalar_type z,
+                            scalar_type w) {
+#if VML_USE_SSE_AVX
+	return _mm_set_ps(w, z, y, x);
+#else
+	return {x, y, z, w};
+#endif
+}
+
+inline quad::type quad::set_unaligned(scalar_type const* v) {
+#if VML_USE_SSE_AVX
+	return _mm_loadu_ps(v);
+#else
+	return {v[0], v[1], v[2], v[3]};
+#endif
+}
+
+inline quad::type quad::zero() {
+#if VML_USE_SSE_AVX
+	return _mm_setzero_ps();
+#else
+	return {0, 0, 0, 0};
+#endif
+}
+
+inline quad::scalar_type quad::get(quad::pref q, std::uint32_t idx) {
+#if VML_USE_SSE_AVX
+#if defined(_MSC_VER)
+	return q.m128_f32[idx];
+#else
+	return reinterpret_cast<scalar_type const*>(&q)[idx];
+#endif
+#else
+	return q[idx];
+#endif
+}
+
+inline quad::scalar_type quad::x(quad::pref q) {
+#if VML_USE_SSE_AVX
+	return _mm_cvtss_f32(q);
+#else
+	return q[0];
+#endif
+}
+
+inline quad::scalar_type quad::y(quad::pref q) {
+#if VML_USE_SSE_AVX
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 1, 1, 1));
+	return _mm_cvtss_f32(temp);
+#else
+	return q[1];
+#endif
+}
+
+inline quad::scalar_type quad::z(quad::pref q) {
+#if VML_USE_SSE_AVX
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 2, 2, 2));
+	return _mm_cvtss_f32(temp);
+#else
+	return q[2];
+#endif
+}
+
+inline quad::scalar_type quad::w(quad::pref q) {
+#if VML_USE_SSE_AVX
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 3, 3, 3));
+	return _mm_cvtss_f32(temp);
+#else
+	return q[3];
+#endif
+}
+
+inline quad::type quad::setx(quad::pref q, scalar_type val) {
+#if VML_USE_SSE_AVX
+	type v = _mm_set_ss(val);
+	return _mm_move_ss(q, v);
+#else
+	return {val, q[1], q[2], q[3]};
+#endif
+}
+
+inline quad::type quad::sety(quad::pref q, scalar_type val) {
+#if VML_USE_SSE_AVX
+#ifdef _MSC_VER
+	type res;
+	res.m128_f32[0] = q.m128_f32[0];
+	res.m128_f32[1] = val;
+	res.m128_f32[2] = q.m128_f32[2];
+	res.m128_f32[3] = q.m128_f32[3];
+	return res;
+#else
+	type res = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 0, 1));
+	type v   = _mm_set_ss(val);
+	// Replace the x component
+	res = _mm_move_ss(res, v);
+	// Swap y and x again
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 2, 0, 1));
+#endif
+#else
+	return {q[0], val, q[2], q[3]};
+#endif
+}
+
+inline quad::type quad::setz(quad::pref q, scalar_type val) {
+#if VML_USE_SSE_AVX
+#ifdef _MSC_VER
+	type res;
+	res.m128_f32[0] = q.m128_f32[0];
+	res.m128_f32[1] = q.m128_f32[1];
+	res.m128_f32[2] = val;
+	res.m128_f32[3] = q.m128_f32[3];
+	return res;
+#else
+	type res = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 0, 1, 2));
+	type v   = _mm_set_ss(val);
+	// Replace the x component
+	res = _mm_move_ss(res, v);
+	// Swap y and x again
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 0, 1, 2));
+#endif
+#else
+	return {q[0], q[1], val, q[3]};
+#endif
+}
+
+inline quad::type quad::setw(quad::pref q, scalar_type val) {
+#if VML_USE_SSE_AVX
+#ifdef _MSC_VER
+	type res;
+	res.m128_f32[0] = q.m128_f32[0];
+	res.m128_f32[1] = q.m128_f32[1];
+	res.m128_f32[2] = q.m128_f32[2];
+	res.m128_f32[3] = val;
+	return res;
+#else
+	type res = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 2, 1, 3));
+	type v   = _mm_set_ss(val);
+	// Replace the x component
+	res = _mm_move_ss(res, v);
+	// Swap y and x again
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 2, 0, 1));
+#endif
+#else
+	return {q[0], q[1], q[2], val};
+#endif
+}
+
+inline quad::type quad::splat_x(quad::pref q) {
+#if VML_USE_SSE_AVX
+	return _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
+#else
+	return {q[0], q[0], q[0], q[0]};
+#endif
+}
+
+inline quad::type quad::splat_y(quad::pref q) {
+#if VML_USE_SSE_AVX
+	return _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 1, 1, 1));
+#else
+	return {q[1], q[1], q[1], q[1]};
+#endif
+}
+
+inline quad::type quad::splat_z(quad::pref q) {
+#if VML_USE_SSE_AVX
+	return _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 2, 2, 2));
+#else
+	return {q[2], q[2], q[2], q[2]};
+#endif
+}
+
+inline quad::type quad::splat_w(quad::pref q) {
+#if VML_USE_SSE_AVX
+	return _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 3, 3, 3));
+#else
+	return {q[3], q[3], q[3], q[3]};
+#endif
+}
+
+inline bool quad::greater_any(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return (_mm_movemask_ps(_mm_cmpgt_ps(a, b))) != 0;
+#else
+	return a[0] > b[0] || a[1] > b[1] || a[2] > b[2] || a[3] > b[3];
+#endif
+}
+
+inline bool quad::greater_all(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return (_mm_movemask_ps(_mm_cmpgt_ps(a, b)) == 0xF);
+#else
+	return a[0] > b[0] && a[1] > b[1] && a[2] > b[2] && a[3] > b[3];
+#endif
+}
+
+inline bool quad::lesser_any(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return (_mm_movemask_ps(_mm_cmplt_ps(a, b))) != 0;
+#else
+	return a[0] < b[0] || a[1] < b[1] || a[2] < b[2] || a[3] < b[3];
+#endif
+}
+
+inline bool quad::lesser_all(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return (_mm_movemask_ps(_mm_cmplt_ps(a, b)) == 0xF);
+#else
+	return a[0] < b[0] && a[1] < b[1] && a[2] < b[2] && a[3] < b[3];
+#endif
+}
+
+inline quad::type quad::abs(quad::pref q) {
+#if VML_USE_SSE_AVX
+
+	return _mm_and_ps(q, vml_cast_i_to_v(_mm_set_epi32(0x7fffffff, 0x7fffffff,
+	                                                   0x7fffffff, 0x7fffffff)));
+#else
+	return quad::set(vml::abs(q[0]), vml::abs(q[1]), vml::abs(q[2]),
+	                 vml::abs(q[3]));
+#endif
+}
+
+inline quad::type quad::negate(quad::pref q) {
+#if VML_USE_SSE_AVX
+	const __m128i k_sign =
+	    _mm_set_epi32(0x80000000, 0x80000000, 0x80000000, 0x80000000);
+	return _mm_xor_ps(q, vml_cast_i_to_v(k_sign));
+#else
+	return quad::set(-(q[0]), -(q[1]), -(q[2]), -(q[3]));
+#endif
+}
+
+inline quad::type quad::add(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_add_ps(a, b);
+#else
+	return quad::set(a[0] + b[0], a[1] + b[1], a[2] + b[2], a[3] + b[3]);
+#endif
+}
+
+inline quad::type quad::sub(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_sub_ps(a, b);
+#else
+	return quad::set(a[0] - b[0], a[1] - b[1], a[2] - b[2], a[3] - b[3]);
+
+#endif
+}
+
+inline quad::type quad::mul(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_mul_ps(a, b);
+#else
+	return quad::set(a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]);
+#endif
+}
+
+inline quad::type quad::div(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_div_ps(a, b);
+#else
+	return quad::set(a[0] / b[0], a[1] / b[1], a[2] / b[2], a[3] / b[3]);
+#endif
+}
+
+inline quad::type quad::mul(quad::pref q, scalar_type val) {
+#if VML_USE_SSE_AVX
+	__m128 res = _mm_set_ps1(val);
+	return _mm_mul_ps(q, res);
+#else
+	return quad::set(q[0] * val, q[1] * val, q[2] * val, q[3] * val);
+#endif
+}
+
+inline quad::type quad::mul(scalar_type val, quad::pref q) {
+#if VML_USE_SSE_AVX
+	__m128 res = _mm_set_ps1(val);
+	return _mm_mul_ps(q, res);
+#else
+	return quad::set(q[0] * val, q[1] * val, q[2] * val, q[3] * val);
+#endif
+}
+
+inline quad::type quad::madd(quad::pref a, quad::pref v, quad::pref c) {
+#if VML_USE_SSE_AVX
+	type t = _mm_mul_ps(a, v);
+	return _mm_add_ps(t, c);
+#else
+	return quad::add(quad::mul(a, v), c);
+#endif
+}
+
+inline quad::scalar_type quad::hadd(quad::pref v) {
+#if VML_USE_SSE_AVX
+#if VML_USE_SSE_LEVEL >= 3
+	type q = _mm_hadd_ps(v, v); // latency 7
+	q      = _mm_hadd_ps(q, q); // latency 7
+	return x(q);
+#else
+	type q    = v;
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
+	q         = _mm_add_ps(q, temp);
+	// x+z,x+z,x+z,y+w
+	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
+	// y+w, ??, ??, ??
+	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
+	// x+z+y+w,??, ??, ??
+	q = _mm_add_ss(q, temp);
+	return q;
+#endif
+#else
+	return v[0] + v[1] + v[2] + v[3];
+#endif
+}
+
+inline quad::type quad::recip_sqrt(quad::pref qpf) {
+#if VML_USE_SSE_AVX
+#if VML_PREFER_SPEED_OVER_ACCURACY
+	return _mm_rsqrt_ps(qpf);
+#else
+	const __m128 approx = _mm_rsqrt_ps(qpf);
+	const __m128 muls   = _mm_mul_ps(_mm_mul_ps(qpf, approx), approx);
+	return _mm_mul_ps(_mm_mul_ps({0.5f, 0.5f, 0.5f, 0.5f}, approx),
+	                  _mm_sub_ps({3.f, 3.f, 3.f, 3.f}, muls));
+#endif
+#else
+	return quad::set(vml::recip_sqrt(qpf[0]), vml::recip_sqrt(qpf[1]),
+	                 vml::recip_sqrt(qpf[2]), vml::recip_sqrt(qpf[3]));
+#endif
+}
+
+inline quad::type quad::select(quad::pref v1, quad::pref v2,
+                               quad::pref control) {
+#if VML_USE_SSE_AVX
+	type vtemp1 = _mm_andnot_ps(control, v1);
+	type vtemp2 = _mm_and_ps(v2, control);
+	return _mm_or_ps(vtemp1, vtemp2);
+#else
+	type ret;
+	std::uint32_t* iret = reinterpret_cast<std::uint32_t*>(&ret);
+	std::uint32_t* iv1  = reinterpret_cast<std::uint32_t*>(&v1);
+	std::uint32_t* iv2  = reinterpret_cast<std::uint32_t*>(&v2);
+	std::uint32_t* ic   = reinterpret_cast<std::uint32_t*>(&control);
+	for (int i = 0; i < 4; ++i)
+		iret[i] = (~ic[i] & iv1[i]) | (ic[i] & iv2[i]);
+	return ret;
+#endif
+}
+
+inline quad::type quad::vdot(quad::pref vec1, quad::pref vec2) {
+#if VML_USE_SSE_AVX
+#if VML_USE_SSE_LEVEL >= 4
+	return _mm_dp_ps(vec1, vec2, 0xFF);
+#elif VML_USE_SSE_LEVEL >= 3
+	type q = _mm_mul_ps(vec1, vec2);
+	q      = _mm_hadd_ps(q, q); // latency 7
+	q      = _mm_hadd_ps(q, q); // latency 7
+	return q;
+#else
+	type q    = _mm_mul_ps(vec1, vec2);
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
+	q         = _mm_add_ps(q, temp);
+	// x+z,x+z,x+z,y+w
+	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
+	// y+w, ??, ??, ??
+	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
+	// x+z+y+w,??, ??, ??
+	q = _mm_add_ss(q, temp);
+	return q;
+#endif
+#else
+	return quad::set(quad::dot(vec1, vec2), 0, 0, 0);
+#endif
+}
+
+inline quad::scalar_type quad::dot(quad::pref q1, quad::pref q2) {
+#if VML_USE_SSE_AVX
+	return quad::x(quad::vdot(q1, q2));
+#else
+	return q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3];
+#endif
+}
+
+inline quad::type quad::normalize(quad::pref vec) {
+#if VML_USE_SSE_AVX
+#if VML_USE_SSE_LEVEL >= 4
+	type q = _mm_dp_ps(vec, vec, 0xFF);
+	// get the reciprocal
+	q = _mm_sqrt_ps(q);
+	return _mm_div_ps(vec, q);
+#elif VML_USE_SSE_LEVEL >= 3
+	type q = _mm_mul_ps(vec, vec);
+	q      = _mm_hadd_ps(q, q); // latency 7
+	q      = _mm_hadd_ps(q, q); // latency 7
+	                            // get the reciprocal
+	q = _mm_sqrt_ss(q);
+	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
+	return _mm_div_ps(vec, q);
+#else
+	type q    = _mm_mul_ps(vec, vec);
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
+	q         = _mm_add_ps(q, temp);
+	// x+z,x+z,x+z,y+w
+	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
+	// y+w, ??, ??, ??
+	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
+	// x+z+y+w,??, ??, ??
+	q = _mm_add_ss(q, temp);
+	// get the reciprocal
+	q = _mm_sqrt_ss(q);
+	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
+	return _mm_div_ps(vec, q);
+#endif
+#else
+	float res = vml::sqrt(quad::dot(vec, vec));
+	return quad::set(vec[0] / res, vec[1] / res, vec[2] / res, vec[3] / res);
+#endif
+}
+
+inline quad::type quad::lerp(quad::pref src, quad::pref dst,
+                             quad::scalar_type t) {
+	return quad::madd(quad::set(t), quad::sub(dst, src), src);
+}
+
+inline quad::scalar_type quad::length(quad::pref vec) {
+	return vml::sqrt(quad::dot(vec, vec));
+}
+
+inline quad::scalar_type quad::sqlength(quad::pref vec) {
+	return quad::dot(vec, vec);
+}
+
+inline quad::scalar_type quad::distance(quad::pref vec1, quad::pref vec2) {
+	return quad::length(quad::sub(vec1, vec2));
+}
+
+inline quad::scalar_type quad::sqdistance(quad::pref vec1, quad::pref vec2) {
+	return quad::sqlength(quad::sub(vec1, vec2));
+}
+inline quad::type quad::half(pref a) { return mul(a, 0.5f); }
+} // namespace vml

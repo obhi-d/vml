@@ -1,0 +1,8 @@
+---
+Language: Cpp
+PenaltyReturnTypeOnItsOwnLine: '10000'
+TabWidth: '2'
+UseTab: ForIndentation
+PointerAlignment: Left
+AlignConsecutiveAssignments: true
+...
