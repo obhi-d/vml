@@ -4,6 +4,7 @@
 #include "plane.hpp"
 
 namespace vml {
+
 struct frustum_t {
 	struct coherency {
 		std::uint32_t mask;
@@ -23,77 +24,77 @@ struct frustum_t {
 	enum { k_fixed_plane_count = 6 };
 
 	frustum_t() : size(0) {}
-	frustum_t(frustum_tconst& iOther) : size(iOther.size) {
-		if (size < kFixedPlaneCount && size > 0) {
+	frustum_t(frustum_t const& i_other) : size(i_other.size) {
+		if (size < k_fixed_plane_count && size > 0) {
 			for (std::uint32_t i = 0; i < size; ++i)
-				frustum[i] = iOther.frustum[i];
+				planes[i] = i_other.planes[i];
 		} else {
-			planes = new vPlane[size];
+			planes = vml::allocate(sizeof(vml::plane_t)*size, alignof(vml::plane_t));
 			for (std::uint32_t i = 0; i < size; ++i)
-				planes[i] = iOther.planes[i];
+				planes[i] = i_other.planes[i];
 		}
 	}
-	frustum_t(frustum_t&& iOther) : size(iOther.size) {
-		if (size < kFixedPlaneCount && size > 0) {
+	frustum_t(frustum_t&& i_other) : size(i_other.size) {
+		if (size < k_fixed_plane_count && size > 0) {
 			for (std::uint32_t i = 0; i < size; ++i)
-				frustum[i] = iOther.frustum[i];
+				frustum[i] = i_other.frustum[i];
 		} else {
-			planes        = iOther.planes;
-			iOther.planes = nullptr;
+			planes        = i_other.planes;
+			i_other.planes = nullptr;
 		}
 	}
-	frustum_t(const vPlane* iPlanes, std::uint32_t iSize) : size(iSize) {
-		if (size < kFixedPlaneCount && size > 0) {
+	frustum_t(const plane_t* i_planes, std::uint32_t iSize) : size(iSize) {
+		if (size < k_fixed_plane_count && size > 0) {
 			for (std::uint32_t i = 0; i < size; ++i)
-				frustum[i] = iPlanes[i];
+				frustum[i] = i_planes[i];
 		} else {
-			planes = new vPlane[size];
+			planes = new plane_t[size];
 			for (std::uint32_t i = 0; i < size; ++i)
-				planes[i] = iPlanes[i];
+				planes[i] = i_planes[i];
 		}
 	}
 	~frustum_t();
 
-	inline frustum_t& operator=(frustum_tconst& iOther) {
-		if (size > kFixedPlaneCount && planes)
+	inline frustum_t& operator=(frustum_tconst& i_other) {
+		if (size > k_fixed_plane_count && planes)
 			delete[] planes;
 
-		size = iOther.size;
-		if (size < kFixedPlaneCount && size > 0) {
+		size = i_other.size;
+		if (size < k_fixed_plane_count && size > 0) {
 			for (std::uint32_t i = 0; i < size; ++i)
-				frustum[i] = iOther.frustum[i];
+				frustum[i] = i_other.frustum[i];
 		} else {
-			planes = new vPlane[size];
+			planes = new plane_t[size];
 			for (std::uint32_t i = 0; i < size; ++i)
-				planes[i] = iOther.planes[i];
+				planes[i] = i_other.planes[i];
 		}
 		return *this;
 	}
 
-	inline frustum_t& operator=(frustum_t&& iOther) {
-		if (size > kFixedPlaneCount && planes)
+	inline frustum_t& operator=(frustum_t&& i_other) {
+		if (size > k_fixed_plane_count && planes)
 			delete[] planes;
-		size = iOther.size;
-		if (size < kFixedPlaneCount && size > 0) {
+		size = i_other.size;
+		if (size < k_fixed_plane_count && size > 0) {
 			for (std::uint32_t i = 0; i < size; ++i)
-				frustum[i] = iOther.frustum[i];
+				frustum[i] = i_other.frustum[i];
 		} else {
-			planes        = iOther.planes;
-			iOther.planes = nullptr;
+			planes        = i_other.planes;
+			i_other.planes = nullptr;
 		}
 		return *this;
 	}
 
 	inline std::uint32_t Size() const { return size; }
 
-	inline vPlane GetPlane(size_t i) const {
+	inline plane_t GetPlane(size_t i) const {
 		L_ASSERT(i < size);
-		return (size > kFixedPlaneCount) ? frustum[i] : planes[i];
+		return (size > k_fixed_plane_count) ? frustum[i] : planes[i];
 	}
 
-	inline void SetPlane(const vPlane& iPlane, size_t i) {
+	inline void SetPlane(const plane_t& iPlane, size_t i) {
 		L_ASSERT(i < size);
-		vPlane* dest = (size > kFixedPlaneCount) ? &frustum[i] : &planes[i];
+		plane_t* dest = (size > k_fixed_plane_count) ? &frustum[i] : &planes[i];
 		*dest        = iPlane;
 	}
 
@@ -104,15 +105,14 @@ struct frustum_t {
 	 */
 	void ConstructFrom(const vMat4& mat);
 
-	const vPlane* GetPlanes() const {
-		return (size > kFixedPlaneCount) ? frustum_t : planes;
+	const plane_t* GetPlanes() const {
+		return (size > k_fixed_plane_count) ? frustum_t : planes;
 	}
-	vPlane* GetPlanes() { return (size > kFixedPlaneCount) ? frustum_t : planes; }
+	plane_t* GetPlanes() { return (size > k_fixed_plane_count) ? frustum_t : planes; }
 
-	transform const& local);
 	union {
 		plane_t planes[k_fixed_plane_count];
-		plane_t* ex_planes;
+		plane_t* ex_planes;	
 	};
 	// if size <= 6, we use frustum, otherwise we use planes
 	std::uint32_t size;

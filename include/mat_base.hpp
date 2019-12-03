@@ -28,14 +28,14 @@ inline typename mat_base<concrete>::type mat_base<concrete>::FromVectorMapping(
 	Vector3 axis = Vec3Op::Cross(axis1, axis2);
 	// OPTIMIZE: we can also check the angle to
 	// see if its a multiple of Pi.
-	if (Math::Abs(axis.x) < Math::kEpsilonMed &&
-	    Math::Abs(axis.y) < Math::kEpsilonMed &&
-	    Math::Abs(axis.z) < Math::kEpsilonMed) {
+	if (Math::abs(axis.x) < Math::kEpsilonMed &&
+	    Math::abs(axis.y) < Math::kEpsilonMed &&
+	    Math::abs(axis.z) < Math::kEpsilonMed) {
 		// take a cross for that
 		axis = Vec3Op::Cross(axis1, Vector3::kYAxis);
-		if (Math::Abs(axis.x) < Math::kEpsilonMed &&
-		    Math::Abs(axis.y) < Math::kEpsilonMed &&
-		    Math::Abs(axis.z) < Math::kEpsilonMed) {
+		if (Math::abs(axis.x) < Math::kEpsilonMed &&
+		    Math::abs(axis.y) < Math::kEpsilonMed &&
+		    Math::abs(axis.z) < Math::kEpsilonMed) {
 			axis = Vec3Op::Cross(axis1, Vector3::kXAxis);
 		}
 	}
@@ -176,19 +176,19 @@ inline void mat_base<concrete>::SetRot(ref ret, TraitsQuat::pref rot) {
 	scalar_type wy = rot.w * rot.y;
 	scalar_type wz = rot.w * rot.z;
 
-	ret.m00 = (1 - 2 * (yy + zz));
-	ret.m01 = (2 * (xy + wz));
+	ret.e[0][0] = (1 - 2 * (yy + zz));
+	ret.e[0][1] = (2 * (xy + wz));
 	ret.m02 = (2 * (xz - wy));
 	ret.m03 = 0;
 
 	ret.m10 = (2 * (xy - wz));
-	ret.m11 = (1 - 2 * (xx + zz));
-	ret.m12 = (2 * (yz + wx));
+	ret.e[1][1] = (1 - 2 * (xx + zz));
+	ret.e[1][2] = (2 * (yz + wx));
 	ret.m13 = 0;
 
-	ret.m20 = (2 * (xz + wy));
-	ret.m21 = (2 * (yz - wx));
-	ret.m22 = (1 - 2 * (xx + yy));
+	ret.e[2][0] = (2 * (xz + wy));
+	ret.e[2][1] = (2 * (yz - wx));
+	ret.e[2][2] = (1 - 2 * (xx + yy));
 	ret.m23 = 0;
 #endif
 }

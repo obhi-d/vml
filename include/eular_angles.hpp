@@ -1,15 +1,17 @@
 #pragma once
 #include "quad.hpp"
+#include "vec3.hpp"
+#include "quat.hpp"
 
 namespace vml {
 namespace detail {} // namespace detail
-struct eular_angles : public quad {
-	using quad::cref;
-	using quad::pref;
-	using quad::ref;
-	using quad::row_type;
-	using quad::scalar_type;
-	using quad::type;
+struct eular_angles : public vec3 {
+	using vec3::cref;
+	using vec3::pref;
+	using vec3::ref;
+	using vec3::row_type;
+	using vec3::scalar_type;
+	using vec3::type;
 
 	static inline type canonize(pref m);
 	static inline type from_quat(quat_t const& m);
@@ -20,22 +22,22 @@ struct eular_angles : public quad {
 inline eular_angles::type eular_angles::canonize(
     pref m) { // First, wrap r[0] in range -pi ... pi
 	type r;
-	r[0] = Math::WrapPi(m[0]);
+	r[0] = wrap_pi(m[0]);
 	r[1] = m[1];
 	r[2] = m[2];
 	// Now, check for "the back side" of the matrix r[0] outside
 	// the canonical range of -pi/2 ... pi/2
-	if (r[0] < -Math::kPiBy2) {
-		r[0] = -Math::kPiBy2 - r[0];
-		r[1] += Math::kPi;
-		r[2] += Math::kPi;
-	} else if (r[0] > Math::kPiBy2) {
-		r[0] = Math::kPi - r[0];
-		r[1] += Math::kPi;
-		r[2] += Math::kPi;
+	if (r[0] < -k_pi_by_2) {
+		r[0] = -k_pi_by_2 - r[0];
+		r[1] += k_pi;
+		r[2] += k_pi;
+	} else if (r[0] > k_pi_by_2) {
+		r[0] = k_pi - r[0];
+		r[1] += k_pi;
+		r[2] += k_pi;
 	}
 	// Now check for the gimbel Lock case (within a slight tolerance)
-	if (Math::Abs(r[0]) > Math::kPiBy2 - 1e-4) {
+	if (vml::abs(r[0]) > k_pi_by_2 - 1e-4) {
 		// We are in gimbel Lock. Assign all rotation
 		// about the vertical axis to r[1]
 		r[1] += r[2];
@@ -43,93 +45,93 @@ inline eular_angles::type eular_angles::canonize(
 	} else {
 		// Not in gimbel Lock. Wrap the r[2] angle in
 		// canonical range
-		r[2] = Math::WrapPi(r[2]);
+		r[2] = wrap_pi(r[2]);
 	}
 	// Wrap r[1] in canonical range
-	r[1] = Math::WrapPi(r[1]);
+	r[1] = wrap_pi(r[1]);
 	return r;
 }
 
-inline eular_angles::type eular_angles::from_quat(quat_t const& m) {
+inline eular_angles::type eular_angles::from_quat(quat_t const& src) {
 	type r;
-	float srcX = QuatOp::x(src);
-	float srcY = QuatOp::y(src);
-	float srcZ = QuatOp::z(src);
-	float srcW = QuatOp::GetW(src);
+	float src_x = quad::x(src);
+	float src_y = quad::y(src);
+	float src_z = quad::z(src);
+	float src_w = quad::w(src);
 	// Extract sin(r[0])
-	float sp = -2.0f * (srcY * srcZ - srcW * srcX);
+	float sp = -2.0f * (src_y * src_z - src_w * src_x);
 	// Check for Gimbel Lock, giving slight tolerance for numerical imprecision
-	if (Math::Abs(sp) > 0.9999f) {
+	if (vml::abs(sp) > 0.9999f) {
 		// Looking straight up or down
-		r[0] = Math::kPiBy2 * sp;
+		r[0] = k_pi_by_2 * sp;
 		// Compute r[1], slam r[2] to zero
-		r[1] = Math::ArcTan2(-srcX * srcZ + srcW * srcY,
-		                     0.5f - srcY * srcY - srcZ * srcZ);
+		r[1] = arc_tan2(-src_x * src_z + src_w * src_y,
+		                     0.5f - src_y * src_y - src_z * src_z);
 		r[2] = 0.0f;
 	} else {
 		// Compute angles. We don't have to use the "safe" asin
 		// function because we already checked for range errors when
 		// checking for Gimbel Lock
-		r[0] = Math::ArcSin(sp);
-		r[1] = Math::ArcTan2(srcX * srcZ + srcW * srcY,
-		                     0.5f - srcX * srcX - srcY * srcY);
-		r[2] = Math::ArcTan2(srcX * srcY + srcW * srcZ,
-		                     0.5f - srcX * srcX - srcZ * srcZ);
+		r[0] = arc_sin(sp);
+		r[1] = arc_tan2(src_x * src_z + src_w * src_y,
+		                     0.5f - src_x * src_x - src_y * src_y);
+		r[2] = arc_tan2(src_x * src_y + src_w * src_z,
+		                     0.5f - src_x * src_x - src_z * src_z);
 	}
 	return r;
 }
 
-inline eular_angles::type eular_angles::from_inv_quat(quat_t const& m) {
+inline eular_angles::type eular_angles::from_inv_quat(quat_t const& src) {
 	type r;
-	float srcX = quat::x(src);
-	float srcY = quat::y(src);
-	float srcZ = quat::z(src);
-	float srcW = quat::GetW(src);
+	float src_x = quat::x(src);
+	float src_y = quat::y(src);
+	float src_z = quat::z(src);
+	float src_w = quat::w(src);
 	// Extract sin(r[0])
-	float sp = -2.0f * (srcY * srcZ + srcW * srcX);
+	float sp = -2.0f * (src_y * src_z + src_w * src_x);
 	// Check for Gimbel Lock, giving slight tolerance for numerical imprecision
-	if (Math::Abs(sp) > 0.9999f) {
+	if (vml::abs(sp) > 0.9999f) {
 		// Looking straight up or down
-		r[0] = Math::kPiBy2 * sp;
+		r[0] = k_pi_by_2 * sp;
 		// Compute heading, slam bank to zero
-		r[1] = Math::ArcTan2(-srcX * srcZ - srcW * srcY,
-		                     0.5f - srcY * srcY - srcZ * srcZ);
+		r[1] = arc_tan2(-src_x * src_z - src_w * src_y,
+		                     0.5f - src_y * src_y - src_z * src_z);
 		r[2] = 0.0f;
 	} else {
 		// Compute angles. We don't have to use the "safe" asin
 		// function because we already checked for range errors when
 		// checking for Gimbel Lock
-		r[0] = Math::ArcSin(sp);
-		r[1] = Math::ArcTan2(srcX * srcZ - srcW * srcY,
-		                     0.5f - srcX * srcX - srcY * srcY);
-		r[2] = Math::ArcTan2(srcX * srcY - srcW * srcZ,
-		                     0.5f - srcX * srcX - srcZ * srcZ);
+		r[0] = arc_sin(sp);
+		r[1] = arc_tan2(src_x * src_z - src_w * src_y,
+		                     0.5f - src_x * src_x - src_y * src_y);
+		r[2] = arc_tan2(src_x * src_y - src_w * src_z,
+		                     0.5f - src_x * src_x - src_z * src_z);
 	}
 	return r;
 }
 
 inline eular_angles::type eular_angles::from_mat4(mat4_t const& m) {
-	return FromMat3x4(*reinterpret_cast<const TraitsMat3x4::type*>(&m));
+	return from_mat3(*reinterpret_cast<const mat3_t*>(&m));
 }
 
-inline eular_angles::type eular_angles::from_mat3(mat3_t const& m) {
+inline eular_angles::type eular_angles::from_mat3(mat3_t const& src) {
 	type r;
 	// Extract sin(r[0]) from m32.
-	float sp = -src.m21;
+	float sp = -src.e[2][1];
 	// Check for Gimbel Lock
-	if (Math::Abs(sp) > 9.99999f) {
+	if (vml::abs(sp) > 9.99999f) {
 		// Looking straight up or down
-		r[0] = Math::kPiBy2 * sp;
+		r[0] = k_pi_by_2 * sp;
 		// Compute r[1], slam r[2] to zero
-		r[1] = Math::ArcTan2(-src.m12, src.m00);
+		r[1] = arc_tan2(-src.e[1][2], src.e[0][0]);
 		r[2] = 0.0f;
 	} else {
 		// Compute angles. We don't have to use the "safe" asin
 		// function because we already checked for range errors when
 		// checking for Gimbel Lock
-		r[1] = Math::ArcTan2(src.m20, src.m22);
-		r[0] = Math::ArcSin(sp);
-		r[2] = Math::ArcTan2(src.m01, src.m11);
+		r[1] = arc_tan2(src.e[2][0], src.e[2][2]);
+		r[0] = arc_sin(sp);
+		r[2] = arc_tan2(src.e[0][1], src.e[1][1]);
 	}
 	return r;
 }

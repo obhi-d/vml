@@ -43,7 +43,7 @@ inline type quat::from_axis_angle(axis_angle_t const& v) {
 	N        = _mm_or_ps(N, N3D_0001.v);
 
 	float f, c;
-	Math::SinCos(QuatOp::GetW(axis) * .5f, f, c);
+	Math::SinCos(quad::w(axis) * .5f, f, c);
 	V_Quad vSineCosine = QuadOp::set(f, f, f, c);
 	return _mm_mul_ps(N, vSineCosine);
 #else
@@ -58,44 +58,44 @@ inline type quat::from_mat4(mat4_t const& m) {
 inline type quat::from_mat3(mat3_t const& m) {
 	int maxi;
 	float maxdiag, trace;
-	trace = m.m00 + m.m11 + m.m22 + 1.0f;
+	trace = m.e[0][0] + m.e[1][1] + m.e[2][2] + 1.0f;
 	if (trace > 0.0f) {
-		return set((m.m12 - m.m21) / (2.0f * sqrt(trace)),
-		           (m.m20 - m.m02) / (2.0f * sqrt(trace)),
-		           (m.m01 - m.m10) / (2.0f * sqrt(trace)), sqrt(trace) / 2.0f);
+		return set((m.e[1][2] - m.e[2][1]) / (2.0f * sqrt(trace)),
+		           (m.e[2][0] - m.m02) / (2.0f * sqrt(trace)),
+		           (m.e[0][1] - m.m10) / (2.0f * sqrt(trace)), sqrt(trace) / 2.0f);
 	}
 	maxi    = 0;
-	maxdiag = m.m00;
+	maxdiag = m.e[0][0];
 
-	if (m.m11 > maxdiag) {
-		maxdiag = m.m11;
+	if (m.e[1][1] > maxdiag) {
+		maxdiag = m.e[1][1];
 		maxi    = 1;
 	}
 
-	if (m.m22 > maxdiag) {
-		maxdiag = m.m22;
+	if (m.e[2][2] > maxdiag) {
+		maxdiag = m.e[2][2];
 		maxi    = 2;
 	}
 
 	float s, invS;
 	switch (maxi) {
 	case 0:
-		s    = 2.0f * sqrt(1.0f + m.m00 - m.m11 - m.m22);
+		s    = 2.0f * sqrt(1.0f + m.e[0][0] - m.e[1][1] - m.e[2][2]);
 		invS = 1 / s;
-		return set(0.25f * s, (m.m01 + m.m10) * invS, (m.m02 + m.m20) * invS,
-		           (m.m12 - m.m21) * invS);
+		return set(0.25f * s, (m.e[0][1] + m.m10) * invS, (m.m02 + m.e[2][0]) * invS,
+		           (m.e[1][2] - m.e[2][1]) * invS);
 
 	case 1:
-		s    = 2.0f * sqrt(1.0f + m.m11 - m.m00 - m.m22);
+		s    = 2.0f * sqrt(1.0f + m.e[1][1] - m.e[0][0] - m.e[2][2]);
 		invS = 1 / s;
-		return set((m.m01 + m.m10) * invS, 0.25f * s, (m.m12 + m.m21) * invS,
-		           (m.m20 - m.m02) * invS);
+		return set((m.e[0][1] + m.m10) * invS, 0.25f * s, (m.e[1][2] + m.e[2][1]) * invS,
+		           (m.e[2][0] - m.m02) * invS);
 	case 2:
 	default:
-		s    = 2.0f * sqrt(1.0f + m.m22 - m.m00 - m.m11);
+		s    = 2.0f * sqrt(1.0f + m.e[2][2] - m.e[0][0] - m.e[1][1]);
 		invS = 1 / s;
-		return set((m.m02 + m.m20) * invS, (m.m12 + m.m21) * invS, 0.25f * s,
-		           (m.m01 - m.m10) * invS);
+		return set((m.m02 + m.e[2][0]) * invS, (m.e[1][2] + m.e[2][1]) * invS, 0.25f * s,
+		           (m.e[0][1] - m.m10) * invS);
 	}
 }
 inline type quat::mul(pref q1, pref q2) {
@@ -143,20 +143,20 @@ inline type quat::mul(pref q1, pref q2) {
 inline vec3a_t quat::transform(pref q1, vec3a_t const& q2) {
 	vec3a_t uv  = vec3a::Cross(q, v);
 	vec3a_t uuv = vec3a::Cross(q, uv);
-	return vec3a::add(vec3a::add(v, QuadOp::mul(uv, 2 * QuatOp::GetW(q))),
+	return vec3a::add(vec3a::add(v, QuadOp::mul(uv, 2 * quad::w(q))),
 	                    vec3a::add(uuv, uuv));
 }
 inline vec3a_t quat::transform_bounds(pref q1, vec3a_t const& extends) {
 	Vector3A uv  = vec3a::Cross(q, v);
 	Vector3A uuv = vec3a::Cross(q, uv);
 	return vec3a::add(
-	    vec3a::add(v, vec3a::Abs(QuadOp::mul(uv, 2 * QuatOp::GetW(q)))),
-	    vec3a::Abs(vec3a::add(uuv, uuv)));
+	    vec3a::add(v, vec3a::abs(QuadOp::mul(uv, 2 * quad::w(q)))),
+	    vec3a::abs(vec3a::add(uuv, uuv)));
 }
 inline type quat::slerp(pref q1, pref q2, scalar_type t) {
 	float cosom, absCosom, sinom, omega, scale0, scale1;
 	cosom    = Vec4Op::dot(from, to);
-	absCosom = Math::Abs(cosom);
+	absCosom = Math::abs(cosom);
 	if ((1.0f - absCosom) > Math::kEpsilon) {
 		omega  = Math::ArcCos(absCosom);
 		sinom  = 1.0f / Math::Sin(omega);

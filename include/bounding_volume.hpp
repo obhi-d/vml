@@ -39,7 +39,7 @@ struct bounding_volume_t { /*! center wrt some coordinate system */
 	vec4_t orig_extends_and_radius;
 };
 
-struct bounding_volume_t {
+struct bounding_volume {
 	inline static void nullify(bounding_volume_t&);
 	inline static void set(bounding_volume_t& _, const vec3a_t& center,
 	                       const vec3a_t& extends);
@@ -54,12 +54,12 @@ struct bounding_volume_t {
 	inline static void update(bounding_volume_t& _, bounding_volume_t const&);
 };
 
-inline void bounding_volume_t::nullify(bounding_volume_t& _) {
+inline void bounding_volume::nullify(bounding_volume_t& _) {
 	_.center = _.orig_center = _.extends = vec3a::zero();
 	_.orig_extends_and_radius            = vec4::zero();
 }
 
-inline void bounding_volume_t::set(bounding_volume_t& _, const vec3a_t& center,
+inline void bounding_volume::set(bounding_volume_t& _, const vec3a_t& center,
                                    const vec3a_t& extends) {
 	_.center = _.orig_center = center;
 	_.extends = _.orig_extends_and_radius = extends;
@@ -68,7 +68,7 @@ inline void bounding_volume_t::set(bounding_volume_t& _, const vec3a_t& center,
 	    _.orig_extends_and_radius, vec3a::length(vec3a::mul(extends, 2.0f)));
 }
 
-inline void bounding_volume_t::set(bounding_volume_t& _, vec3a::pref center,
+inline void bounding_volume::set(bounding_volume_t& _, vec3a::pref center,
                                    vec3a::pref extends, float radius) {
 	_.center = _.orig_center = center;
 	_.extends = _.orig_extends_and_radius = extends;
@@ -76,27 +76,27 @@ inline void bounding_volume_t::set(bounding_volume_t& _, vec3a::pref center,
 	_.orig_extends_and_radius = vec4::set_w(_.orig_extends_and_radius, radius);
 }
 
-inline void bounding_volume_t::update(bounding_volume_t& _, mat4::pref m) {
+inline void bounding_volume::update(bounding_volume_t& _, mat4::pref m) {
 	// TODO test which is tighter avro's bound transform or this one
 	_.center  = mat4::transform_assume_ortho(m, _.orig_center);
 	_.extends = mat4::transform_bounds_extends(
 	    m, vec3a::from_vec4(_.orig_extends_and_radius));
 }
 
-inline void bounding_volume_t::update(bounding_volume_t& _, float scale,
+inline void bounding_volume::update(bounding_volume_t& _, float scale,
                                       quat::pref rot, vec3a::pref pos) {
 	_.center  = vec3a::add(quat::transform(rot, _.orig_center), pos);
 	_.extends = quat::transform_bounds_extends(
 	    rot, vec3a::mul(_.orig_extends_and_radius, scale));
 }
 
-inline void bounding_volume_t::update(bounding_volume_t& _,
+inline void bounding_volume::update(bounding_volume_t& _,
                                       transform_t const& tf) {
 	update(_, transform::scaling(tf), transform::rotation(tf),
 	       transform::translation(tf));
 }
 
-inline void bounding_volume_t::update(bounding_volume_t& _,
+inline void bounding_volume::update(bounding_volume_t& _,
                                       vec3a_t const* points,
                                       std::uint32_t count) {
 	aabb_t box = aabb::set(_.center, _.extends);
@@ -105,7 +105,7 @@ inline void bounding_volume_t::update(bounding_volume_t& _,
 	set(_, aabb::center(box), aabb::half_size(box));
 }
 
-inline void bounding_volume_t::update(bounding_volume_t& _,
+inline void bounding_volume::update(bounding_volume_t& _,
                                       bounding_volume_t const& vol) {
 	vec3a_t a = vec3a::abs(vec3a::sub(_.center, vol.center));
 	vec3a_t b = vec3a::add(_.center, vol.center);

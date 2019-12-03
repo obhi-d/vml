@@ -96,13 +96,13 @@ inline V_Matrix4x4::V_Matrix4x4(const Matrix3x4& m, const Vector3A& v) {
 	r[3] = v;
 }
 
-inline V_Matrix4x4::V_Matrix4x4(float m00, float m01, float m02, float m03,
-                                float m10, float m11, float m12, float m13,
-                                float m20, float m21, float m22, float m23,
+inline V_Matrix4x4::V_Matrix4x4(float e[0][0], float e[0][1], float m02, float m03,
+                                float m10, float e[1][1], float e[1][2], float m13,
+                                float e[2][0], float [2][1], float e[2][2], float m23,
                                 float m30, float m31, float m32, float m33) {
-	r[0] = Vec4::Set(m00, m01, m02, m03);
-	r[1] = Vec4::Set(m10, m11, m12, m13);
-	r[2] = Vec4::Set(m20, m21, m22, m23);
+	r[0] = Vec4::Set(e[0][0], e[0][1], m02, m03);
+	r[1] = Vec4::Set(m10, e[1][1], e[1][2], m13);
+	r[2] = Vec4::Set(e[2][0], [2][1], e[2][2], m23);
 	r[3] = Vec4::Set(m30, m31, m32, m33);
 }
 
@@ -432,7 +432,7 @@ inline TraitsVec3A::type MatOp<V_Matrix4x4>::transform_bounds_extends(
 	for (int i = 0; i < 3; i++) {
 		ret.v[i] = 0.0f;
 		for (int j = 0; j < 3; j++) {
-			ret.v[i] += v.v[j] * Math::Abs(m.m[i + j * 4]);
+			ret.v[i] += v.v[j] * Math::abs(m.m[i + j * 4]);
 		}
 	}
 	return ret;
@@ -558,17 +558,17 @@ inline MatOp<V_Matrix4x4>::type MatOp<
 	float wy = rot.w * rot.y;
 	float wz = rot.w * rot.z;
 
-	ret.m00 = scale * (1 - 2 * (yy + zz));
-	ret.m01 = scale * (2 * (xy + wz));
+	ret.e[0][0] = scale * (1 - 2 * (yy + zz));
+	ret.e[0][1] = scale * (2 * (xy + wz));
 	ret.m02 = scale * (2 * (xz - wy));
 
 	ret.m10 = scale * (2 * (xy - wz));
-	ret.m11 = scale * (1 - 2 * (xx + zz));
-	ret.m12 = scale * (2 * (yz + wx));
+	ret.e[1][1] = scale * (1 - 2 * (xx + zz));
+	ret.e[1][2] = scale * (2 * (yz + wx));
 
-	ret.m20 = scale * (2 * (xz + wy));
-	ret.m21 = scale * (2 * (yz - wx));
-	ret.m22 = scale * (1 - 2 * (xx + yy));
+	ret.e[2][0] = scale * (2 * (xz + wy));
+	ret.e[2][1] = scale * (2 * (yz - wx));
+	ret.e[2][2] = scale * (1 - 2 * (xx + yy));
 
 	ret.m03 = ret.m13 = ret.m23 = 0.0f;
 	ret.m30                     = pos.x;
@@ -591,17 +591,17 @@ inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::FromScale(
 	return ret;
 #else
 	Matrix4x4 ret;
-	ret.m00 = scale.x;
-	ret.m01 = 0;
+	ret.e[0][0] = scale.x;
+	ret.e[0][1] = 0;
 	ret.m02 = 0;
 	ret.m03 = 0;
 	ret.m10 = 0;
-	ret.m11 = scale.y;
-	ret.m12 = 0;
+	ret.e[1][1] = scale.y;
+	ret.e[1][2] = 0;
 	ret.m13 = 0;
-	ret.m20 = 0;
-	ret.m21 = 0;
-	ret.m22 = scale.z;
+	ret.e[2][0] = 0;
+	ret.e[2][1] = 0;
+	ret.e[2][2] = scale.z;
 	ret.m23 = 0;
 	ret.m30 = 0;
 	ret.m31 = 0;
@@ -622,17 +622,17 @@ inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::FromPos(
 	return ret;
 #else
 	Matrix4x4 ret;
-	ret.m00 = 1;
-	ret.m01 = 0;
+	ret.e[0][0] = 1;
+	ret.e[0][1] = 0;
 	ret.m02 = 0;
 	ret.m03 = 0;
 	ret.m10 = 0;
-	ret.m11 = 1;
-	ret.m12 = 0;
+	ret.e[1][1] = 1;
+	ret.e[1][2] = 0;
 	ret.m13 = 0;
-	ret.m20 = 0;
-	ret.m21 = 0;
-	ret.m22 = 1;
+	ret.e[2][0] = 0;
+	ret.e[2][1] = 0;
+	ret.e[2][2] = 1;
 	ret.m23 = 0;
 	ret.m30 = pos.x;
 	ret.m31 = pos.y;
@@ -741,17 +741,17 @@ inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::Mul(pref m,
 	return ret;
 #else
 	Matrix4x4 ret = m;
-	ret.m00 *= scale;
-	ret.m01 *= scale;
+	ret.e[0][0] *= scale;
+	ret.e[0][1] *= scale;
 	ret.m02 *= scale;
 
 	ret.m10 *= scale;
-	ret.m11 *= scale;
-	ret.m12 *= scale;
+	ret.e[1][1] *= scale;
+	ret.e[1][2] *= scale;
 
-	ret.m20 *= scale;
-	ret.m21 *= scale;
-	ret.m22 *= scale;
+	ret.e[2][0] *= scale;
+	ret.e[2][1] *= scale;
+	ret.e[2][2] *= scale;
 	return ret;
 #endif
 }

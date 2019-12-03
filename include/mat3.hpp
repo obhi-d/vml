@@ -27,9 +27,9 @@ struct mat3 : public mat_base<detail::mat3_traits> {
 inline MatOp<V_Matrix3x4>::type MatOp<V_Matrix3x4>::Transpose(pref m) {
 #if L_VECTOR_MATH_TYPE_IS_SSE
 	Matrix3x4 ret;
-	//    std::swap(m.m01, m.m10);
-	//    std::swap(m.m02, m.m20);
-	//    std::swap(m.m12, m.m21);
+	//    std::swap(m.e[0][1], m.m10);
+	//    std::swap(m.m02, m.e[2][0]);
+	//    std::swap(m.e[1][2], m.e[2][1]);
 	ret.r[0] = _mm_move_ss(
 	    _mm_shuffle_ps(m.r[1], m.r[2], _MM_SHUFFLE(3, 0, 0, 3)), m.r[0]);
 	ret.r[1] =
@@ -48,9 +48,9 @@ inline MatOp<V_Matrix3x4>::type MatOp<V_Matrix3x4>::Transpose(pref m) {
 	//  g   h   i
 	// swap(b,d) swap(g,c), swap(h,f)
 	Matrix3x4 ret = m;
-	std::swap(ret.m01, ret.m10);
-	std::swap(ret.m12, ret.m21);
-	std::swap(ret.m02, ret.m20);
+	std::swap(ret.e[0][1], ret.m10);
+	std::swap(ret.e[1][2], ret.e[2][1]);
+	std::swap(ret.m02, ret.e[2][0]);
 	return ret;
 
 #endif

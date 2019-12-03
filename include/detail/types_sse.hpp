@@ -23,10 +23,30 @@ template <typename scalar_t> using quat_t         = quad_t<scalar_t>;
 template <typename scalar_t> using axis_angle_t   = quad_t<scalar_t>;
 template <typename scalar_t> using polar_coord_t  = vec2_t<scalar_t>;
 template <typename scalar_t> using eular_angles_t = vec3_t<scalar_t>;
-template <typename scalar_t> using mat4_t = std::array<vec4_t<scalar_t>, 4>;
-template <typename scalar_t> using mat3_t = std::array<vec3a_t<scalar_t>, 3>;
 template <typename scalar_t> using rect_t = std::array<vec2_t<scalar_t>, 2>;
 template <typename scalar_t> using aabb_t = std::array<vec3a_t<scalar_t>, 2>;
+
+template <typename scalar_t>
+struct mat4_t {
+  //! @note This is possibly non isoc++, but knowing it will work for all compilers
+  //! is why I am putting it here
+  union {
+    vec4_t<scalar_t> r[4];
+    scalar_t m[16];
+    scalar_t e[4][4];
+  };
+};
+
+template <typename scalar_t>
+struct mat3_t {
+  //! @note This is possibly non isoc++, but knowing it will work for all compilers
+  //! is why I am putting it here
+  union {
+    vec4_t<scalar_t> r[3];
+    scalar_t m[12];
+    scalar_t e[3][4];
+  };
+};
 
 bool constexpr is_pref_cref = false;
 

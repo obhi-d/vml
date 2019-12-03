@@ -10,7 +10,7 @@ struct aabb_traits {
 	using pref = std::conditional_t<types::is_pref_cref, type const&, type>;
 	using cref = type const&;
 	using scalar_type = float;
-	using row_type    = types::vec4_t<scalar_t>;
+	using row_type    = types::vec4_t<scalar_type>;
 
 	enum { element_count = 8 };
 	enum { row_count = 2 };

@@ -46,5 +46,23 @@
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <memory>
 
-namespace vml {}
+namespace vml {
+
+void* allocate(std::size_t amount, std::size_t alignment) {
+#ifdef _MSC_VER
+		return _aligned_malloc(amount, alignment);
+#else
+		return aligned_alloc(amount, alignment);
+#endif
+}	
+
+void deallocate(void* mem, std::size_t size) {
+#ifdef _MSC_VER
+		return _aligned_free(mem);
+#else
+		return free(mem);
+#endif
+}
+}

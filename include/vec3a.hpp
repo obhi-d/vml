@@ -23,7 +23,7 @@ struct vec3a : public quad {
 	static inline type mul(pref q1, mat4_t const& m);
 };
 
-inline vec3a::type type vec3a::from_vec4(vec4_t p) {
+inline vec3a::type vec3a::from_vec4(vec4_t p) {
 #if VML_USE_SSE_AVX
 
 	return _mm_and_ps(p, VML_CLEAR_W_VEC);
