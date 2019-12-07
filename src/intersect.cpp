@@ -5,7 +5,7 @@ namespace vml {
 namespace intersect {
 VML_API result_t bounding_volumes(bounding_volume_t const& vol1,
                                   bounding_volume_t const& vol2) {
-	vec3a::type d = vec3a::sub(vol1.center(), vol2.center());
+	vec3a::type d = vec3a::sub(vol1.center, vol2.center);
 	float dist    = vec3a::dot(d, d);
 	float rad     = vol1.GetRadius() + vol2.GetRadius();
 	if (dist > rad * rad)
@@ -19,9 +19,7 @@ VML_API result_t bounding_volumes(bounding_volume_t const& vol1,
 
 VML_API result_t bounding_volume_frustum_coherent(bounding_volume_t const& vol,
                                                   frustum const& frustum,
-                                                  std::uint32_t i_mask,
-                                                  std::uint32_t& outMask,
-                                                  std::uint32_t& o_last_plane) {
+                                                  frustum_t::coherency& coherency) {
 	std::uint32_t i, k = 1 << o_last_plane;
 	result_t result_t         = result_t::k_inside;
 	const plane::type* planes = frustum.GetPlanes();

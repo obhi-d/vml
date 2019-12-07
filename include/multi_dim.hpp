@@ -14,7 +14,7 @@ template <typename concrete> struct multi_dim {
 	enum { row_count = concrete::row_count };
 	enum { column_count = concrete::column_count };
 
-	static inline row_type Row(pref m, std::uint32_t i);
+	static inline row_type row(pref m, std::uint32_t i);
 	static inline scalar_type Get(pref m, std::uint32_t i, std::uint32_t j);
 	static inline type add(pref m1, pref m2);
 	static inline type sub(pref m1, pref m2);
@@ -22,7 +22,7 @@ template <typename concrete> struct multi_dim {
 };
 
 template <typename concrete>
-inline typename multi_dim<concrete>::row_type multi_dim<concrete>::Row(
+inline typename multi_dim<concrete>::row_type multi_dim<concrete>::row(
     pref m, uint32 i) {
 	return m.r[i];
 }
@@ -34,20 +34,20 @@ inline typename multi_dim<concrete>::base_type multi_dim<concrete>::Get(
 }
 
 template <typename concrete>
-inline typename multi_dim<concrete>::type multi_dim<concrete>::Add(pref m1,
+inline typename multi_dim<concrete>::type multi_dim<concrete>::add(pref m1,
                                                                    pref m2) {
 	type r;
 	for (unsigned int i = 0; i < _rows; ++i)
-		r.r[i] = row_op::Add(m1.r[i], m2.r[i]);
+		r.r[i] = row_op::add(m1.r[i], m2.r[i]);
 	return r;
 }
 
 template <typename concrete>
-inline typename multi_dim<concrete>::type multi_dim<concrete>::Sub(pref m1,
+inline typename multi_dim<concrete>::type multi_dim<concrete>::sub(pref m1,
                                                                    pref m2) {
 	type r;
 	for (unsigned int i = 0; i < _rows; ++i)
-		r.r[i] = row_op::Sub(m1.r[i], m2.r[i]);
+		r.r[i] = row_op::sub(m1.r[i], m2.r[i]);
 	return r;
 }
 template <typename concrete>

@@ -17,6 +17,8 @@ struct mat4_traits {
 } // namespace detail
 
 struct mat4 : public mat_base<detail::mat4_traits> {
+	//! Returns maximum scaling
+	static inline float max_scale(mat4 const&);
 	// @brief Full matrix multiplication
 	static inline type mul(pref m1, pref m2);
 	// @brief transform vertices assuming orthogonal matrix
@@ -82,17 +84,17 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 inline V_Matrix4x4::V_Matrix4x4() {}
 
 inline V_Matrix4x4& V_Matrix4x4::operator=(const Matrix4x4& m) {
-	r[0] = Mat4x4Op::Row(m, 0);
-	r[1] = Mat4x4Op::Row(m, 1);
-	r[2] = Mat4x4Op::Row(m, 2);
-	r[3] = Mat4x4Op::Row(m, 3);
+	r[0] = Mat4x4Op::row(m, 0);
+	r[1] = Mat4x4Op::row(m, 1);
+	r[2] = Mat4x4Op::row(m, 2);
+	r[3] = Mat4x4Op::row(m, 3);
 	return *this;
 }
 
 inline V_Matrix4x4::V_Matrix4x4(const Matrix3x4& m, const Vector3A& v) {
-	r[0] = Mat3x4Op::Row(m, 0);
-	r[1] = Mat3x4Op::Row(m, 1);
-	r[2] = Mat3x4Op::Row(m, 2);
+	r[0] = Mat3x4Op::row(m, 0);
+	r[1] = Mat3x4Op::row(m, 1);
+	r[2] = Mat3x4Op::row(m, 2);
 	r[3] = v;
 }
 
@@ -100,10 +102,10 @@ inline V_Matrix4x4::V_Matrix4x4(float e[0][0], float e[0][1], float m02, float m
                                 float m10, float e[1][1], float e[1][2], float m13,
                                 float e[2][0], float [2][1], float e[2][2], float m23,
                                 float m30, float m31, float m32, float m33) {
-	r[0] = Vec4::Set(e[0][0], e[0][1], m02, m03);
-	r[1] = Vec4::Set(m10, e[1][1], e[1][2], m13);
-	r[2] = Vec4::Set(e[2][0], [2][1], e[2][2], m23);
-	r[3] = Vec4::Set(m30, m31, m32, m33);
+	r[0] = vec4::Set(e[0][0], e[0][1], m02, m03);
+	r[1] = vec4::Set(m10, e[1][1], e[1][2], m13);
+	r[2] = vec4::Set(e[2][0], [2][1], e[2][2], m23);
+	r[3] = vec4::Set(m30, m31, m32, m33);
 }
 
 inline V_Matrix4x4::V_Matrix4x4(std::initializer_list<float> l) {
@@ -125,7 +127,7 @@ inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::Mul(pref m1, pref m2) {
 	vy = _mm_mul_ps(vy, m2.r[1]);
 	vz = _mm_mul_ps(vz, m2.r[2]);
 	vw = _mm_mul_ps(vw, m2.r[3]);
-	// Perform a binary Add to reduce cumulative errors
+	// Perform a binary add to reduce cumulative errors
 	vx          = _mm_add_ps(vx, vz);
 	vy          = _mm_add_ps(vy, vw);
 	vx          = _mm_add_ps(vx, vy);
@@ -228,9 +230,9 @@ inline void MatOp<V_Matrix4x4>::transform_assume_ortho(
 		y = Vec3AOp::Set(((float*)inpVec)[1]);
 		z = Vec3AOp::Set(((float*)inpVec)[2]);
 
-		r = Vec3AOp::Madd(z, Row(m, 2), Row(m, 3));
-		r = Vec3AOp::Madd(y, Row(m, 1), r);
-		r = Vec3AOp::Madd(x, Row(m, 0), r);
+		r = Vec3AOp::Madd(z, row(m, 2), row(m, 3));
+		r = Vec3AOp::Madd(y, row(m, 1), r);
+		r = Vec3AOp::Madd(x, row(m, 0), r);
 
 		((float*)outVec)[0] = r.x;
 		((float*)outVec)[1] = r.y;
@@ -276,9 +278,9 @@ inline void MatOp<V_Matrix4x4>::transform_assume_ortho(
 		y = Vec3AOp::Set(((float*)inpVec)[1]);
 		z = Vec3AOp::Set(((float*)inpVec)[2]);
 
-		r = Vec3AOp::Madd(z, Row(m, 2), Row(m, 3));
-		r = Vec3AOp::Madd(y, Row(m, 1), r);
-		r = Vec3AOp::Madd(x, Row(m, 0), r);
+		r = Vec3AOp::Madd(z, row(m, 2), row(m, 3));
+		r = Vec3AOp::Madd(y, row(m, 1), r);
+		r = Vec3AOp::Madd(x, row(m, 0), r);
 
 		((float*)inpVec)[0] = r.x;
 		((float*)inpVec)[1] = r.y;
@@ -335,9 +337,9 @@ inline void MatOp<V_Matrix4x4>::transform(pref m,
 		y = Vec3AOp::Set(((float*)inpVec)[1]);
 		z = Vec3AOp::Set(((float*)inpVec)[2]);
 
-		r = Vec3AOp::Madd(z, Row(m, 2), Row(m, 3));
-		r = Vec3AOp::Madd(y, Row(m, 1), r);
-		r = Vec3AOp::Madd(x, Row(m, 0), r);
+		r = Vec3AOp::Madd(z, row(m, 2), row(m, 3));
+		r = Vec3AOp::Madd(y, row(m, 1), r);
+		r = Vec3AOp::Madd(x, row(m, 0), r);
 		r = Vec3AOp::Mul(r, 1.f / r.w);
 
 		((float*)outVec)[0] = r.x;
@@ -372,9 +374,9 @@ inline TraitsVec3A::type MatOp<V_Matrix4x4>::transform_assume_ortho(
 	y = Vec3AOp::SplatY(v);
 	z = Vec3AOp::SplatZ(v);
 
-	r = Vec3AOp::Madd(z, Row(m, 2), Row(m, 3));
-	r = Vec3AOp::Madd(y, Row(m, 1), r);
-	r = Vec3AOp::Madd(x, Row(m, 0), r);
+	r = Vec3AOp::Madd(z, row(m, 2), row(m, 3));
+	r = Vec3AOp::Madd(y, row(m, 1), r);
+	r = Vec3AOp::Madd(x, row(m, 0), r);
 	return r;
 #endif
 }
@@ -402,9 +404,9 @@ inline TraitsVec3A::type MatOp<V_Matrix4x4>::transform(pref m,
 	y = Vec3AOp::SplatY(v);
 	z = Vec3AOp::SplatZ(v);
 
-	r = Vec3AOp::Madd(z, Row(m, 2), Row(m, 3));
-	r = Vec3AOp::Madd(y, Row(m, 1), r);
-	r = Vec3AOp::Madd(x, Row(m, 0), r);
+	r = Vec3AOp::Madd(z, row(m, 2), row(m, 3));
+	r = Vec3AOp::Madd(y, row(m, 1), r);
+	r = Vec3AOp::Madd(x, row(m, 0), r);
 	r = Vec3AOp::Mul(r, 1.f / r.w);
 
 	return r;
@@ -670,14 +672,14 @@ inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::FromWorldToView(pref m) {
 inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::FromLookAt(
     TraitsVec3A::pref eye, TraitsVec3A::pref lookAt, TraitsVec3A::pref vup) {
 	Matrix4x4 m;
-	Vec3A::type zaxis = m.r[2] = Vec3AOp::Normalize(Vec3AOp::Sub(lookAt, eye));
-	Vec3A::type xaxis = m.r[0] = Vec3AOp::Normalize(Vec3AOp::Cross(vup, m.r[2]));
+	Vec3A::type zaxis = m.r[2] = Vec3AOp::normalize(Vec3AOp::sub(lookAt, eye));
+	Vec3A::type xaxis = m.r[0] = Vec3AOp::normalize(Vec3AOp::Cross(vup, m.r[2]));
 	Vec3A::type yaxis = m.r[1] = Vec3AOp::Cross(m.r[2], m.r[0]);
 	m.r[3]                     = Matrix4x4::kIdentityMatrix.r[3];
 	m                          = Transpose(m);
 
-	Vector3A negEye = Vec3AOp::Negate(eye);
-	m.r[3] = Vec4::Set(Vec3AOp::dot(xaxis, negEye), Vec3AOp::dot(yaxis, negEye),
+	Vector3A negEye = Vec3AOp::negate(eye);
+	m.r[3] = vec4::Set(Vec3AOp::dot(xaxis, negEye), Vec3AOp::dot(yaxis, negEye),
 	                   Vec3AOp::dot(zaxis, negEye), 1);
 
 	return m;
@@ -784,10 +786,10 @@ inline TraitsVec4::type MatOp<V_Matrix4x4>::Mul(TraitsVec4::pref v, pref m) {
 	z = Vec3AOp::SplatZ(v);
 	w = Vec3AOp::SplatW(v);
 
-	r = Vec3AOp::Mul(w, Row(m, 3));
-	r = Vec3AOp::Madd(z, Row(m, 2), r);
-	r = Vec3AOp::Madd(y, Row(m, 1), r);
-	r = Vec3AOp::Madd(x, Row(m, 0), r);
+	r = Vec3AOp::Mul(w, row(m, 3));
+	r = Vec3AOp::Madd(z, row(m, 2), r);
+	r = Vec3AOp::Madd(y, row(m, 1), r);
+	r = Vec3AOp::Madd(x, row(m, 0), r);
 
 	return r;
 #endif
@@ -1060,9 +1062,9 @@ inline MatOp<V_Matrix4x4>::type MatOp<V_Matrix4x4>::InverseOrtho(pref m) {
 		ret.m[i * 4 + 3] = 0;
 	}
 
-	ret.m30 = -Vec3A::dot(Row(m, 3), Row(m, 0));
-	ret.m31 = -Vec3A::dot(Row(m, 3), Row(m, 1));
-	ret.m32 = -Vec3A::dot(Row(m, 3), Row(m, 2));
+	ret.m30 = -Vec3A::dot(row(m, 3), row(m, 0));
+	ret.m31 = -Vec3A::dot(row(m, 3), row(m, 1));
+	ret.m32 = -Vec3A::dot(row(m, 3), row(m, 2));
 	ret.m33 = 1;
 	return ret;
 

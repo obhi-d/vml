@@ -50,4 +50,5 @@ inline vec4::type vec4::mul(
 	return r;
 #endif
 }
+
 }

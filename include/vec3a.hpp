@@ -85,22 +85,18 @@ inline vec3a::type vec3a::vdot(pref vec1, pref vec2) {
 #if VML_USE_SSE_LEVEL >= 4
 	return _mm_dp_ps(vec1, vec2, 0x7F);
 #elif VML_USE_SSE_LEVEL >= 3
-	type q = _mm_mul_ps(vec1, vec2);
-	q      = _mm_and_ps(q, );
-	q      = _mm_hadd_ps(q, q); // latency 7
-	q      = _mm_hadd_ps(q, q); // latency 7
-	return q;
+	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
+	__m128 sums = _mm_add_ps(v, shuf);
+	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
+	sums        = _mm_add_ss(sums, shuf);
+	return sums;
 #else
-	// Perform the dot product
-	type q = _mm_mul_ps(vec, vec);
-	// x=dot[1], y=dot[2]
-	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 1, 2, 1));
-	// Result[0] = x+y
-	q = _mm_add_ss(q, temp);
-	// x=dot[2]
-	temp = _mm_shuffle_ps(temp, temp, _MM_SHUFFLE(1, 1, 1, 1));
-	// Result[0] = (x+y)+z
-	return _mm_add_ss(q, temp);
+	__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1)); // [ C D | A B ]
+	__m128 sums = _mm_add_ps(v, shuf);       // sums = [ D+C C+D | B+A A+B ]
+	shuf        = _mm_movehl_ps(shuf, sums); //  [   C   D | D+C C+D ]  // let the
+	                                  //  compiler avoid a mov by reusing shuf
+	sums = _mm_add_ss(sums, shuf);
+	return sums;
 #endif
 #else
 	return set(dot(vec1, vec2), 0, 0);

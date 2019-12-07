@@ -30,4 +30,5 @@ using ivec2_t        = types::vec2_t<int>;
 using ivec3_t        = types::vec3_t<int>;
 using ivec4_t        = types::vec4_t<int>;
 using irect_t        = types::rect_t<int>;
+using sphere_t       = types::sphere_t<float>;
 } // namespace vml

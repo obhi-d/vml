@@ -32,9 +32,9 @@
 #endif
 
 #define VML_CLEAR_W_VEC                                                        \
-	vml_cast_i_to_v(_mm_set_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000))
-#define VML_XYZ0_W1_VEC vml_cast_i_to_v(_mm_set_epi32(0, 0, 0, 1))
-#define VML_CLEAR_XYZ_VEC vml_cast_i_to_v(_mm_set_epi32(0, 0, 0, 0xFFFFFFFF))
+	vml_cast_i_to_v(_mm_set_epi32(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF))
+#define VML_XYZ0_W1_VEC vml_cast_i_to_v(_mm_set_epi32(1, 0, 0, 0))
+#define VML_CLEAR_XYZ_VEC vml_cast_i_to_v(_mm_set_epi32(0xFFFFFFFF, 0, 0, 0))
 
 #endif
 
@@ -50,19 +50,20 @@
 
 namespace vml {
 
-void* allocate(std::size_t amount, std::size_t alignment) {
+template <typename pointer_arg = void>
+pointer_arg* allocate(std::size_t amount, std::size_t alignment) {
 #ifdef _MSC_VER
-		return _aligned_malloc(amount, alignment);
+	return reinterpret_cast<pointer_arg*>(_aligned_malloc(amount, alignment));
 #else
-		return aligned_alloc(amount, alignment);
+	return reinterpret_cast<pointer_arg*>(aligned_alloc(amount, alignment));
 #endif
-}	
+}
 
 void deallocate(void* mem, std::size_t size) {
 #ifdef _MSC_VER
-		return _aligned_free(mem);
+	return _aligned_free(mem);
 #else
-		return free(mem);
+	return free(mem);
 #endif
 }
-}
+} // namespace vml

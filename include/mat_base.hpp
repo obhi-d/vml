@@ -75,7 +75,7 @@ inline void mat_base<concrete>::Rotate(pref m, TraitsVec3::type* iStream,
 		res        = _mm_add_ps(res, y);
 		x          = _mm_mul_ps(x, m.r[0]);
 		res        = _mm_add_ps(res, x);
-		res        = Vec3AOp::Normalize(res);
+		res        = Vec3AOp::normalize(res);
 		_mm_store_ps(store.s, res);
 		((scalar_type*)inpVec)[0] = store.s[0];
 		((scalar_type*)inpVec)[1] = store.s[1];
@@ -90,9 +90,9 @@ inline void mat_base<concrete>::Rotate(pref m, TraitsVec3::type* iStream,
 		y = QuadOp::Set(((scalar_type*)inpVec)[1]);
 		z = QuadOp::Set(((scalar_type*)inpVec)[2]);
 
-		r = Vec3AOp::Mul(z, Row(m, 2));
-		r = Vec3AOp::Madd(y, Row(m, 1), r);
-		r = Vec3AOp::Normalize(Vec3AOp::Madd(x, Row(m, 0), r));
+		r = Vec3AOp::Mul(z, row(m, 2));
+		r = Vec3AOp::Madd(y, row(m, 1), r);
+		r = Vec3AOp::normalize(Vec3AOp::Madd(x, row(m, 0), r));
 
 		((scalar_type*)inpVec)[0] = r.x;
 		((scalar_type*)inpVec)[1] = r.y;
@@ -117,9 +117,9 @@ inline TraitsVec3A::type mat_base<concrete>::Rotate(pref m,
 	vRes         = _mm_add_ps(vRes, vTemp);
 	return vRes;
 #else
-	V_Quad r = Vec3AOp::Mul(Vec3AOp::SplatZ(v), Row(m, 2));
-	r        = Vec3AOp::Madd(Vec3AOp::SplatY(v), Row(m, 1), r);
-	r        = Vec3AOp::Madd(Vec3AOp::SplatX(v), Row(m, 0), r);
+	V_Quad r = Vec3AOp::Mul(Vec3AOp::SplatZ(v), row(m, 2));
+	r        = Vec3AOp::Madd(Vec3AOp::SplatY(v), row(m, 1), r);
+	r        = Vec3AOp::Madd(Vec3AOp::SplatX(v), row(m, 0), r);
 	return r;
 #endif
 }
@@ -198,8 +198,8 @@ inline void mat_base<concrete>::SetViewAndUp(ref ret, TraitsVec3A::pref viewDir,
                                              TraitsVec3A::pref upDir) {
 	// TODO needs validation
 	Vector3A up;
-	ret.r[2] = Vec3AOp::Normalize(viewDir);
-	ret.r[0] = Vec3AOp::Normalize(Vec3AOp::Cross(viewDir, upDir));
+	ret.r[2] = Vec3AOp::normalize(viewDir);
+	ret.r[0] = Vec3AOp::normalize(Vec3AOp::Cross(viewDir, upDir));
 	ret.r[1] = Vec3AOp::Cross(ret.r[0], ret.r[2]);
 }
 } // namespace vml
