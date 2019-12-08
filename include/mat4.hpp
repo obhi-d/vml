@@ -397,16 +397,17 @@ inline vec3a::type mat4::transform_bounds_extends(
     pref m, vec3a::pref v) {
 #if VML_USE_SSE_AVX
 	quad_t ret       = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-	quad_t clearSign = N3D_ClearSign;
+	quad_t clear_sign = vml_cast_i_to_v(
+	    _mm_set1_epi32(0x7fffffff));
 	ret              = _mm_mul_ps(ret, m.r[0]);
-	ret              = _mm_and_ps(ret, clearSign);
+	ret              = _mm_and_ps(ret, clear_sign);
 	quad_t v_temp     = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
 	v_temp            = _mm_mul_ps(v_temp, m.r[1]);
-	v_temp            = _mm_and_ps(v_temp, clearSign);
+	v_temp            = _mm_and_ps(v_temp, clear_sign);
 	ret              = _mm_add_ps(ret, v_temp);
 	v_temp            = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp            = _mm_mul_ps(v_temp, m.r[2]);
-	v_temp            = _mm_and_ps(v_temp, clearSign);
+	v_temp            = _mm_and_ps(v_temp, clear_sign);
 	ret              = _mm_add_ps(ret, v_temp);
 	return ret;
 #else
@@ -484,6 +485,9 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
                                                   quat::pref rot,
                                                   vec3a::pref pos) {
 #if VML_USE_SSE_AVX
+	constexpr __m128 fff0 =
+	    vml_cast_i_to_v(_mm_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF));
+	
 	quad_t r0, r1, r2;
 	quad_t q0, q1;
 	quad_t v0, v1, v2;
@@ -492,9 +496,9 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
 	q1 = _mm_mul_ps(rot, q0);
 
 	v0 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 0, 0, 1));
-	v0 = _mm_and_ps(v0, N3D_FFFO);
+	v0 = _mm_and_ps(v0, fff0);
 	v1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 1, 2, 2));
-	v1 = _mm_and_ps(v1, N3D_FFFO);
+	v1 = _mm_and_ps(v1, fff0);
 	r0 = _mm_sub_ps(N3D_1110, v0);
 	r0 = _mm_sub_ps(r0, v1);
 
@@ -525,7 +529,8 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
 	ret.r[1] = _mm_mul_ps(scaleQ, q1);
 	q1       = _mm_shuffle_ps(v1, r0, _MM_SHUFFLE(3, 2, 1, 0));
 	ret.r[2] = _mm_mul_ps(scaleQ, q1);
-	ret.r[3] = _mm_or_ps(_mm_and_ps(pos, N3D_FFFO), N3D_0001);
+	ret.r[3] =
+	    _mm_or_ps(_mm_and_ps(pos, fff0), _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f));
 	return ret;
 #else
 	mat4_t ret;
@@ -565,10 +570,13 @@ inline mat4::type mat4::from_scale(
     vec3a::pref scale) {
 #if VML_USE_SSE_AVX
 	mat4_t ret;
-	ret.r[0] = _mm_and_ps(scale, N3D_F00O);
-	ret.r[1] = _mm_and_ps(scale, N3D_0F0O);
-	ret.r[2] = _mm_and_ps(scale, N3D_00FO);
-	ret.r[3] = N3D_0001;
+	ret.r[0] = _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(
+	                                 0, 0, 0, 0xFFFFFFFF)));
+	ret.r[1] = _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(
+	                                 0, 0, 0xFFFFFFFF, 0)));
+	ret.r[2] = _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(
+	                                 0, 0xFFFFFFFF, 0, 0)));
+	ret.r[3] = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);
 	return ret;
 #else
 	mat4_t ret;

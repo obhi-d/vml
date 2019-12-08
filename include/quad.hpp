@@ -21,6 +21,8 @@ struct quad {
 	static inline type isnanv(pref v);
 	static inline type isinfv(pref v);
 	static inline bool isnegative_x(pref v);
+	static inline bool isgreater_x(pref v1, pref v2);
+	static inline bool islesser_x(pref v1, pref v2);
 	static inline type set(scalar_type v);
 	static inline type set(scalar_type x, scalar_type y, scalar_type z);
 	static inline type set(scalar_type x, scalar_type y, scalar_type z,
@@ -126,6 +128,24 @@ inline bool quad::isnegative_x(pref q) {
 	return _mm_cvtsi128_si32(vml_cast_v_to_i(_mm_cmpgt_ss(_mm_set_ps1(0.0f), q))) != 0;
 #else
 	return q[0] < 0.0f;
+#endif
+}
+
+inline bool quad::isgreater_x(pref q1, pref q2) {
+#if VML_USE_SSE_AVX
+	return _mm_cvtsi128_si32(
+	           vml_cast_v_to_i(_mm_cmpgt_ss(q1, q2))) != 0;
+#else
+	return q1[0] > q2[0];
+#endif
+}
+
+inline bool quad::islesser_x(pref q1, pref q2) {
+#if VML_USE_SSE_AVX
+	return _mm_cvtsi128_si32(
+	           vml_cast_v_to_i(_mm_cmplt_ss(q1, q2))) != 0;
+#else
+	return q1[0] < q2[0];
 #endif
 }
 
@@ -556,12 +576,14 @@ inline quad::type quad::vdot(quad::pref vec1, quad::pref vec2) {
 #if VML_USE_SSE_LEVEL >= 4
 	return _mm_dp_ps(vec1, vec2, 0x7F);
 #elif VML_USE_SSE_LEVEL >= 3
+	__m128 v = _mm_mul_ps(vec1, vec2);
 	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
 	__m128 sums = _mm_add_ps(v, shuf);
 	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
 	sums        = _mm_add_ss(sums, shuf);
 	return sums;
 #else
+	__m128 v    = _mm_mul_ps(vec1, vec2);
 	__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1)); // [ C D | A B ]
 	__m128 sums = _mm_add_ps(v, shuf);       // sums = [ D+C C+D | B+A A+B ]
 	shuf        = _mm_movehl_ps(shuf, sums); //  [   C   D | D+C C+D ]  // let the
