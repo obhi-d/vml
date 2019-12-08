@@ -1,3 +1,4 @@
+#pragma once
 #include "quad.hpp"
 
 namespace vml {
@@ -36,7 +37,7 @@ inline vec3a::type vml::vec3a::normalize(pref vec) {
 #if VML_USE_SSE_AVX
 #if VML_USE_SSE_LEVEL >= 4
 	type q = _mm_dp_ps(vec, vec, 0x7F);
-	// Get the reciprocal
+	// get the reciprocal
 	q = _mm_sqrt_ps(q);
 	return _mm_div_ps(vec, q);
 #elif VML_USE_SSE_LEVEL >= 3
@@ -44,7 +45,7 @@ inline vec3a::type vml::vec3a::normalize(pref vec) {
 	q      = _mm_and_ps(q, VML_CLEAR_W_VEC);
 	q      = _mm_hadd_ps(q, q); // latency 7
 	q      = _mm_hadd_ps(q, q); // latency 7
-	                            // Get the
+	                            // get the
 	                            // reciprocal
 	q = _mm_sqrt_ss(q);
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
@@ -157,12 +158,12 @@ inline vec3a::tye vec3a::mul(pref q1, mat4_t const& m) {
 	type ret;
 	ret        = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
 	ret        = _mm_mul_ps(ret, m[0]);
-	type vTemp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
-	vTemp      = _mm_mul_ps(vTemp, m[1]);
-	ret        = _mm_add_ps(ret, vTemp);
-	vTemp      = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
-	vTemp      = _mm_mul_ps(vTemp, m[2]);
-	ret        = _mm_add_ps(ret, vTemp);
+	type v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
+	v_temp      = _mm_mul_ps(v_temp, m[1]);
+	ret        = _mm_add_ps(ret, v_temp);
+	v_temp      = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
+	v_temp      = _mm_mul_ps(v_temp, m[2]);
+	ret        = _mm_add_ps(ret, v_temp);
 	ret        = _mm_add_ps(ret, m[3]);
 	return ret;
 #else

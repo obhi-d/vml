@@ -14,7 +14,7 @@ struct eular_angles : public vec3 {
 	using vec3::type;
 
 	static inline type canonize(pref m);
-	static inline type from_quat(quat_t const& m);
+	static inline type set_rotation(quat_t const& m);
 	static inline type from_inv_quat(quat_t const& m);
 	static inline type from_mat4(mat4_t const& m);
 	static inline type from_mat3(mat3_t const& m);
@@ -52,7 +52,7 @@ inline eular_angles::type eular_angles::canonize(
 	return r;
 }
 
-inline eular_angles::type eular_angles::from_quat(quat_t const& src) {
+inline eular_angles::type eular_angles::set_rotation(quat_t const& src) {
 	type r;
 	float src_x = quad::x(src);
 	float src_y = quad::y(src);
@@ -116,7 +116,7 @@ inline eular_angles::type eular_angles::from_mat4(mat4_t const& m) {
 
 inline eular_angles::type eular_angles::from_mat3(mat3_t const& src) {
 	type r;
-	// Extract sin(r[0]) from m32.
+	// Extract sin(r[0]) from e[3][2].
 	float sp = -src.e[2][1];
 	// Check for Gimbel Lock
 	if (vml::abs(sp) > 9.99999f) {

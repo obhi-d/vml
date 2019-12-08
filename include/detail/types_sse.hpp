@@ -1,5 +1,11 @@
+#pragma once
 
 #include "vml_commons.hpp"
+#if VML_USE_SSE_LEVEL >= 2
+#define USE_SSE2
+#endif
+#include "avx_mathfun.h"
+#include "sse_mathfun.h"
 
 namespace vml {
 
@@ -33,9 +39,12 @@ struct mat4_t {
   //! is why I am putting it here
   union {
     vec4_t<scalar_t> r[4];
-    scalar_t m[16];
+    std::array<scalar_t, 16> m;
     scalar_t e[4][4];
   };
+
+  mat4_t() {};
+  mat4_t(std::initializer_list<float> v) : m(v) {}
 };
 
 template <typename scalar_t>
@@ -44,9 +53,11 @@ struct mat3_t {
   //! is why I am putting it here
   union {
     vec4_t<scalar_t> r[3];
-    scalar_t m[12];
+    std::array<scalar_t, 12> m;
     scalar_t e[3][4];
   };
+  mat3_t() {};
+  mat3_t(std::initializer_list<float> v) : m(v) {}
 };
 
 bool constexpr is_pref_cref = false;

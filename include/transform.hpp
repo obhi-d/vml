@@ -16,7 +16,7 @@ struct transform_t {
 struct transform {
 	static inline void identity(transform_t& _);
 	static inline transform_t identity();
-	static inline void matrix(transform_t const& _, mat4& out);
+	static inline void matrix(transform_t const& _, mat4_t& out);
 	static inline vec3a_t translation(transform_t const& _);
 	static inline quat_t rotation(transform_t const& _);
 	static inline float scale(transform_t const& _);
@@ -25,9 +25,10 @@ struct transform {
 	static inline void set_scale(transform_t const& _, float);
 	static inline transform_t combine(transform_t const& parent_combined,
 	                                  transform_t const& local);
+	static inline vec3a_t mul(vec3a::pref p, transform_t const& _);
 };
 
-static_assert(sizeof(transform) == sizeof(vec4_t) * 2, "Fix size");
+static_assert(sizeof(transform_t) == sizeof(vec4_t) * 2, "Fix size");
 
 inline void transform::identity(transform_t& _) {
 	_.rotation              = quat::identity();
@@ -38,7 +39,7 @@ inline transform_t transform::identity() {
 	identity(tmp);
 	return tmp;
 }
-inline void transform::matrix(transform_t const& _, mat4& out) {
+inline void transform::matrix(transform_t const& _, mat4_t& out) {
 	out = mat4::from_scale_rotation_translation(
 	    vec4::w(_.translation_and_scale), _.rotation,
 	    vec3a::from_vec4(_.translation_and_scale));
@@ -56,7 +57,7 @@ inline void transform::set_translation(transform_t& _, vec3a_t const& v) {
 	    _mm_or_ps(_mm_and_ps(_.translation_and_scale, VML_CLEAR_XYZ_VEC),
 	              _mm_and_ps(v, VML_CLEAR_W_VEC));
 #else
-	_.translation = {v[0], v[1], v[2]};
+	_.translation_and_scale = {v[0], v[1], v[2], _.translation_and_scale[3]};
 #endif
 }
 inline void transform::set_rotation(transform_t& _, quat_t const& r) {
@@ -68,6 +69,24 @@ inline void transform::set_scale(transform_t const& _, float scale) {
 inline transform_t transform::combine(transform_t const& parent_combined,
                                       transform_t const& local) {
 	transform_t _;
-	// TODO implement;
+	_.rotation            = quat::mul(parent_combined.rotation, local.rotation);
+	vec3a_t rotated_trans = quat::transform(
+	    parent_combined.rotation,
+	    quad::mul(translation(local),
+	              quad::splat_w(parent_combined.translation_and_scale)));
+
+	_.translation_and_scale =
+	    quad::mul(quad::add(parent_combined.translation_and_scale, rotated_trans),
+	              quad::set_111w(local.translation_and_scale, 3));
+	return _;
 }
+inline vec3a_t transform::mul(vec3a::pref v, transform_t const& _) {
+	vec3a_t rotated_trans = quat::transform(
+	    _.rotation,
+	    quad::mul(v,
+	              quad::splat_w(_.translation_and_scale)));
+
+	return vec3a::from_vec4(vec4::add(_.translation_and_scale, rotated_trans));
+}
+
 } // namespace vml

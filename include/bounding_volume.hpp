@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vec3.hpp"
 #include "mat4.hpp"
 #include "quad.hpp"
 #include "sphere.hpp"
@@ -13,14 +14,14 @@ struct bounds_info_t {
 };
 
 struct bounds_info {
-	static inline bounds_info& append(bounds_info_t& _,
+	static inline bounds_info_t& append(bounds_info_t& _,
 	                                  bounds_info_t const& info) {
 		if (info.radius > 0) {
 			if (_.radius <= 0)
 				_ = info;
 			else {
 				vec3_t a = vec3::abs(vec3::sub(_.center, info.center));
-				vec3 b   = vec3::add(_.center, info.center);
+				vec3_t b   = vec3::add(_.center, info.center);
 				_.center = vec3::mul(b, 0.5f);
 				_.half_extends =
 				    vec3::add(a, vec3::add(_.half_extends, info.half_extends));
@@ -46,6 +47,7 @@ struct bounding_volume {
 	inline static vec3a_t center(bounding_volume_t const&);
 	inline static vec3a_t half_extends(bounding_volume_t const&);
 	inline static float radius(bounding_volume_t const&);
+	inline static quad_t vradius(bounding_volume_t const&);
 
 	inline static void nullify(bounding_volume_t&);
 	inline static void from_box(bounding_volume_t& _, vec3a_t const& center,
@@ -73,6 +75,10 @@ inline vec3a_t bounding_volume::half_extends(bounding_volume_t const& _) {
 
 inline float bounding_volume::radius(bounding_volume_t const& _) {
 	return sphere::radius(_.spherical_vol);
+}
+
+inline quad_t bounding_volume::vradius(bounding_volume_t const& _) {
+	return sphere::vradius(_.spherical_vol);
 }
 
 inline void bounding_volume::nullify(bounding_volume_t& _) {
@@ -140,18 +146,19 @@ inline void bounding_volume::update(bounding_volume_t& _, vec3a_t const* points,
 
 inline void bounding_volume::update(bounding_volume_t& _,
                                     bounding_volume_t const& vol) {
-	vec3a_t center_this = center(_);
+	vec3a_t center_this  = center(_);
 	vec3a_t center_other = center(vol);
 
 	vec3a_t a = vec3a::abs(vec3a::sub(center_this, center_other));
 	vec3a_t b = vec3a::add(center_this, center_other);
-	vec3a::vdot(a, a);
-	_.center = _.orig_center = vec3a::half(b);
-	_.half_extends           = _.orig_extends_and_radius =
-	    vec3a::add(a, vec3a::add(vol.half_extends, _.half_extends));
-	_.orig_extends_and_radius = vec4::set_w(
-	    _.orig_extends_and_radius,
-	    vec4::w(_.orig_extends_and_radius) +
-	        (vec4::w(vol.orig_extends_and_radius) + vec3a::dot(a, a)));
+
+	_.spherical_vol =
+	    vec3a::set_w(vec3a::half(b),
+	                 vec3a::add_x(vec3a::add_x(vec3a::vradius(vol.spherical_vol),
+	                                           vec3a::vradius(_.spherical_vol)),
+	                              vec3a::vdot(a, a)));
+	_.half_extends = vec3a::add(a, vec3a::add(vol.half_extends, _.half_extends));
+	_.orig_spherical_vol = _.spherical_vol;
+	_.orig_half_extends  = _.half_extends;
 }
 } // namespace vml

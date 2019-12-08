@@ -1,3 +1,4 @@
+#pragma once
 
 #include "vec3a.hpp"
 
@@ -16,7 +17,7 @@ struct plane : public quad {
 	static inline scalar_type dot(pref p, pref vec3a);
 	static inline scalar_type dot_with_normal(pref p, pref vec3a);
 	static inline vec3a_t abs_normal(pref p);
-	static inline vec3a_t get_normal(perf p);
+	static inline vec3a_t get_normal(pref p);
 };
 
 inline plane::type vml::plane::normalize(pref p) { return vec3a::normalize(p); }
@@ -57,11 +58,19 @@ inline plane::scalar_type plane::dot_with_normal(pref p, pref vec3a) {
 }
 
 inline vec3a_t plane::abs_normal(pref p) {
+#if VML_USE_SSE_AVX	
 	return vec3a::abs(_mm_and_ps(p, VML_CLEAR_W_VEC));
+#else
+	return vec3a::abs(vec3a::set(p[0], p[1], p[2], 0));
+#endif
 }
 
-inline vec3a_t plane::get_normal(perf p) {
+inline vec3a_t plane::get_normal(pref p) {
+#if VML_USE_SSE_AVX		
 	return _mm_and_ps(p, VML_CLEAR_W_VEC);
+#else
+	return vec3a::set(p[0], p[1], p[2], 0);
+#endif
 }
 
 } // namespace vml

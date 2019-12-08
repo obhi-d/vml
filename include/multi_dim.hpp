@@ -5,32 +5,33 @@ namespace vml {
 template <typename concrete> struct multi_dim {
 	using type = typename concrete::type;
 	using ref  = type&;
-	using pref = std::conditional_t<types::is_pref_cref, type const&, type>;
+	using pref = type const&;
 	using cref = type const&;
 	using scalar_type = typename concrete::scalar_type;
-	using row_type    = typename concrete::type;
+	using row_type    = typename concrete::row_type;
+	using row_tag     = typename concrete::row_tag;
 
 	enum { element_count = concrete::element_count };
 	enum { row_count = concrete::row_count };
 	enum { column_count = concrete::column_count };
 
 	static inline row_type row(pref m, std::uint32_t i);
-	static inline scalar_type Get(pref m, std::uint32_t i, std::uint32_t j);
+	static inline scalar_type get(pref m, std::uint32_t i, std::uint32_t j);
 	static inline type add(pref m1, pref m2);
 	static inline type sub(pref m1, pref m2);
-	static inline void SetRow(ref m, std::uint32_t i, row_type_pref p);
+	static inline void set_row(ref m, std::uint32_t i, row_type const& p);
 };
 
 template <typename concrete>
 inline typename multi_dim<concrete>::row_type multi_dim<concrete>::row(
-    pref m, uint32 i) {
+    pref m, std::uint32_t i) {
 	return m.r[i];
 }
 
 template <typename concrete>
-inline typename multi_dim<concrete>::base_type multi_dim<concrete>::Get(
-    pref m, uint32 i, uint32 j) {
-	return VecOp<row_type>::Get(m.r[i], j);
+inline typename multi_dim<concrete>::scalar_type multi_dim<concrete>::get(
+    pref m, std::uint32_t i, std::uint32_t j) {
+	return m.e[i][j];
 }
 
 template <typename concrete>
@@ -38,7 +39,7 @@ inline typename multi_dim<concrete>::type multi_dim<concrete>::add(pref m1,
                                                                    pref m2) {
 	type r;
 	for (unsigned int i = 0; i < _rows; ++i)
-		r.r[i] = row_op::add(m1.r[i], m2.r[i]);
+		r.r[i] = row_tag::add(m1.r[i], m2.r[i]);
 	return r;
 }
 
@@ -47,11 +48,12 @@ inline typename multi_dim<concrete>::type multi_dim<concrete>::sub(pref m1,
                                                                    pref m2) {
 	type r;
 	for (unsigned int i = 0; i < _rows; ++i)
-		r.r[i] = row_op::sub(m1.r[i], m2.r[i]);
+		r.r[i] = row_tag::sub(m1.r[i], m2.r[i]);
 	return r;
 }
 template <typename concrete>
-inline void multi_dim<concrete>::SetRow(ref m, uint32 i, row_type_pref r) {
+inline void multi_dim<concrete>::set_row(ref m, std::uint32_t i,
+                                         row_type const& r) {
 	m.r[i] = r;
 }
 } // namespace vml

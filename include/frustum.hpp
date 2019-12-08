@@ -3,6 +3,7 @@
 #include "mat4.hpp"
 #include "plane.hpp"
 #include "vec4.hpp"
+#include <tuple>
 
 namespace vml {
 
@@ -24,87 +25,87 @@ struct frustum_t {
 
 	enum { k_fixed_plane_count = 6 };
 
-	frustum_t() : size(0) {}
-	frustum_t(frustum_t const& i_other) : size(i_other.size) {
-		if (size < k_fixed_plane_count && size > 0) {
-			for (std::uint32_t i = 0; i < size; ++i)
+	frustum_t() : plane_count(0) {}
+	frustum_t(frustum_t const& i_other) : plane_count(i_other.plane_count) {
+		if (plane_count < k_fixed_plane_count && plane_count > 0) {
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				planes[i] = i_other.planes[i];
 		} else {
-			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t)*size, alignof(vml::plane_t));
-			for (std::uint32_t i = 0; i < size; ++i)
+			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t)*plane_count, alignof(vml::plane_t));
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				pplanes[i] = i_other.pplanes[i];
 		}
 	}
-	frustum_t(frustum_t&& i_other) : size(i_other.size) {
-		if (size < k_fixed_plane_count && size > 0) {
-			for (std::uint32_t i = 0; i < size; ++i)
+	frustum_t(frustum_t&& i_other) : plane_count(i_other.plane_count) {
+		if (plane_count < k_fixed_plane_count && plane_count > 0) {
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				planes[i] = i_other.planes[i];
 		} else {
 			pplanes        = i_other.pplanes;
 			i_other.pplanes = nullptr;
 		}
 	}
-	frustum_t(const plane_t* i_planes, std::uint32_t iSize) : size(iSize) {
-		if (size < k_fixed_plane_count && size > 0) {
-			for (std::uint32_t i = 0; i < size; ++i)
+	frustum_t(plane_t const* i_planes, std::uint32_t i_size) : plane_count(i_size) {
+		if (plane_count < k_fixed_plane_count && plane_count > 0) {
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				planes[i] = i_planes[i];
 		} else {
-			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t) * size,
+			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t) * plane_count,
 			                                      alignof(vml::plane_t));
-			for (std::uint32_t i = 0; i < size; ++i)
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				pplanes[i] = i_planes[i];
 		}
 	}
 	~frustum_t();
 
 	inline frustum_t& operator=(frustum_t const& i_other) {
-		if (size > k_fixed_plane_count && pplanes)
-			vml::deallocate(pplanes, sizeof(vml::plane_t) * size);
+		if (plane_count > k_fixed_plane_count && pplanes)
+			vml::deallocate(pplanes, sizeof(vml::plane_t) * plane_count);
 
-		size = i_other.size;
-		if (size < k_fixed_plane_count && size > 0) {
-			for (std::uint32_t i = 0; i < size; ++i)
+		plane_count = i_other.plane_count;
+		if (plane_count < k_fixed_plane_count && plane_count > 0) {
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				planes[i] = i_other.planes[i];
 		} else {
-			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t) * size,
+			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t) * plane_count,
 			                                      alignof(vml::plane_t));
-			for (std::uint32_t i = 0; i < size; ++i)
-				pplanes[i] = i_planes[i];
+			for (std::uint32_t i = 0; i < plane_count; ++i)
+				pplanes[i] = i_other.pplanes[i];
 		}
 		return *this;
 	}
 
 	inline frustum_t& operator=(frustum_t&& i_other) {
-		if (size > k_fixed_plane_count && pplanes)
-			vml::deallocate(pplanes, sizeof(vml::plane_t) * size);
+		if (plane_count > k_fixed_plane_count && pplanes)
+			vml::deallocate(pplanes, sizeof(vml::plane_t) * plane_count);
 
-		size = i_other.size;
-		if (size < k_fixed_plane_count && size > 0) {
-			for (std::uint32_t i = 0; i < size; ++i)
+		plane_count = i_other.plane_count;
+		if (plane_count < k_fixed_plane_count && plane_count > 0) {
+			for (std::uint32_t i = 0; i < plane_count; ++i)
 				planes[i] = i_other.planes[i];
 		} else {
 			pplanes        = i_other.pplanes;
-			i_other.planes = nullptr;
+			i_other.pplanes = nullptr;
 		}
 		return *this;
 	}
 
-	inline std::uint32_t size() const { return size; }
+	inline std::uint32_t count() const { return plane_count; }
 
 	inline plane_t operator[](std::uint32_t i) const {
-		assert(i < size);
-		return (size > k_fixed_plane_count) ? pplanes[i] : planes[i];
+		assert(i < plane_count);
+		return (plane_count > k_fixed_plane_count) ? pplanes[i] : planes[i];
 	}
 
-	inline void modify(std::uint32_t i, plane_t& p) {
-		assert(i < size);
-		plane_t* dest = (size > k_fixed_plane_count) ? &pplanes[i] : &planes[i];
+	inline void modify(std::uint32_t i, plane_t const& p) {
+		assert(i < plane_count);
+		plane_t* dest = (plane_count > k_fixed_plane_count) ? &pplanes[i] : &planes[i];
 		*dest        = p;
 	}
 
 	/**
-	 * @remarks Construct from a Transpose(view*projection) matrix
-	 * @param mat Transpose(View*Projection) or Transpose(Proj)*Transpose(View)
+	 * @remarks Construct from a transpose(view*projection) matrix
+	 * @param mat transpose(View*Projection) or transpose(Proj)*transpose(View)
 	 * matrix
 	 */
 	void build(mat4_t const& mat) {
@@ -128,17 +129,33 @@ struct frustum_t {
 	}
 
 	plane_t const* get_all() const {
-		return (size > k_fixed_plane_count) ? pplanes : planes;
+		return (plane_count > k_fixed_plane_count) ? pplanes : planes;
 	}
 	plane_t* get_all() {
-		return (size > k_fixed_plane_count) ? pplanes : planes;
+		return (plane_count > k_fixed_plane_count) ? pplanes : planes;
 	}
 
 	union {
 		plane_t planes[k_fixed_plane_count];
 		plane_t* pplanes;	
 	};
-	// if size <= 6, we use planes, otherwise we use planes
-	std::uint32_t size;
+	// if plane_count <= 6, we use planes, otherwise we use planes
+	std::uint32_t plane_count;
 };
+
+struct frustum {
+	static inline void set(frustum_t& _, mat4::pref m) {
+		_.build(m);
+	}
+	static inline std::tuple<plane_t const*, std::uint32_t> get_planes(frustum_t const& _) {
+		return std::make_tuple(_.get_all(), _.count());
+	}
+	static inline std::tuple<plane_t*, std::uint32_t> get_planes(frustum_t& _) {
+		return std::make_tuple(_.get_all(), _.count());
+	}
+	static inline void set_plane(frustum_t& _,std::uint32_t i, plane_t const& p) {
+		_.modify(i, p);
+	}
+};
+
 } // namespace vml

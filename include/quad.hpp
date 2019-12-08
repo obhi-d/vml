@@ -46,6 +46,12 @@ struct quad {
 	static inline type add(pref a, pref b);
 	static inline type sub(pref a, pref b);
 	static inline type mul(pref a, pref b);
+	//! Add only the [0]th index
+	static inline type add_x(pref a, pref b);
+	//! Sub only the [0]th index
+	static inline type sub_x(pref a, pref b);
+	//! mul only the [0]th index
+	static inline type mul_x(pref a, pref b);
 	static inline type mul(pref a, scalar_type b);
 	static inline type mul(scalar_type b, pref a);
 	static inline type half(pref a);
@@ -65,9 +71,9 @@ struct quad {
 	static inline type normalize(pref v);
 	static inline type lerp(pref src, pref dest, scalar_type t);
 	static inline type recip_sqrt(pref qpf);
-	//! Set the vector as 0, 0, 0, w -> where w = a[select]
+	//! set the vector as 0, 0, 0, w -> where w = a[select]
 	static inline type set_000w(pref a, std::uint8_t select);
-	//! Set the vector as 1, 1, 1, w -> where w = a[select]
+	//! set the vector as 1, 1, 1, w -> where w = a[select]
 	static inline type set_111w(pref a, std::uint8_t select);
 };
 
@@ -389,6 +395,30 @@ inline quad::type quad::mul(quad::pref a, quad::pref b) {
 #endif
 }
 
+inline quad::type quad::add_x(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_add_ss(a, b);
+#else
+	return quad::set(a[0] + b[0], 0, 0, 0);
+#endif
+}
+
+inline quad::type quad::sub_x(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_sub_ss(a, b);
+#else
+	return quad::set(a[0] - b[0], 0, 0, 0);
+
+#endif
+}
+
+inline quad::type quad::mul_x(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_mul_ss(a, b);
+#else
+	return quad::set(a[0] * b[0], 0, 0, 0);
+#endif
+}
 inline quad::type quad::div(quad::pref a, quad::pref b) {
 #if VML_USE_SSE_AVX
 	return _mm_div_ps(a, b);
@@ -519,25 +549,8 @@ inline quad::type quad::normalize(quad::pref vec) {
 	// get the reciprocal
 	q = _mm_sqrt_ps(q);
 	return _mm_div_ps(vec, q);
-#elif VML_USE_SSE_LEVEL >= 3
-	type q = _mm_mul_ps(vec, vec);
-	q      = _mm_hadd_ps(q, q); // latency 7
-	q      = _mm_hadd_ps(q, q); // latency 7
-	                            // get the reciprocal
-	q = _mm_sqrt_ss(q);
-	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
-	return _mm_div_ps(vec, q);
-#else
-	type q    = _mm_mul_ps(vec, vec);
-	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
-	q         = _mm_add_ps(q, temp);
-	// x+z[0]+z[0]+z[1]+w
-	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
-	// y+w, ??, ??, ??
-	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
-	// x+z+y+w,??, ??, ??
-	q = _mm_add_ss(q, temp);
-	// get the reciprocal
+#else VML_USE_SSE_LEVEL >= 3
+	type q = vdot(vec, vec);
 	q = _mm_sqrt_ss(q);
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
 	return _mm_div_ps(vec, q);
@@ -570,6 +583,7 @@ inline quad::scalar_type quad::sqdistance(quad::pref vec1, quad::pref vec2) {
 }
 inline quad::type quad::half(pref a) { return mul(a, 0.5f); }
 inline quad::type quad::set_000w(pref a, std::uint8_t select) { 
+#if VML_USE_SSE_AVX	
 	switch (select) {
 	case 0: 
 		 return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 0, 0, 3)), VML_CLEAR_XYZ_VEC);
@@ -583,9 +597,15 @@ inline quad::type quad::set_000w(pref a, std::uint8_t select) {
 	}
 	assert(0 && "Not allowed!");
 	return type();
+#else
+	return {0, 0, 0, a[select]};
+#endif
 }
 inline quad::type quad::set_111w(pref a, std::uint8_t select) { 
-
+#if VML_USE_SSE_AVX	
 	return _mm_or_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), set_000w(a, select));
+#else
+	return {1.0, 1.0, 1.0, a[select]};
+#endif
 }
 } // namespace vml
