@@ -9,7 +9,7 @@ namespace vml {
 
 struct frustum_t {
 	struct coherency {
-		std::uint32_t mask;
+		std::uint32_t mask_hierarchy;
 		std::uint32_t plane;
 	};
 
@@ -147,11 +147,11 @@ struct frustum {
 	static inline void set(frustum_t& _, mat4::pref m) {
 		_.build(m);
 	}
-	static inline std::tuple<plane_t const*, std::uint32_t> get_planes(frustum_t const& _) {
-		return std::make_tuple(_.get_all(), _.count());
+	static inline std::pair<plane_t const*, std::uint32_t> get_planes(frustum_t const& _) {
+		return std::make_pair(_.get_all(), _.count());
 	}
-	static inline std::tuple<plane_t*, std::uint32_t> get_planes(frustum_t& _) {
-		return std::make_tuple(_.get_all(), _.count());
+	static inline std::pair<plane_t*, std::uint32_t> get_planes(frustum_t& _) {
+		return std::make_pair(_.get_all(), _.count());
 	}
 	static inline void set_plane(frustum_t& _,std::uint32_t i, plane_t const& p) {
 		_.modify(i, p);

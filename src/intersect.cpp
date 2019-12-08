@@ -1,86 +1,76 @@
 #include <intersect.hpp>
 #include <vec3a.hpp>
-
+#error sphere::center must return x,y,z,1 for dot
 namespace vml {
 namespace intersect {
 VML_API result_t bounding_volumes(bounding_volume_t const& vol1,
                                   bounding_volume_t const& vol2) {
-	vec3a::type d = vec3a::sub(vol1.center, vol2.center);
-	float dist    = vec3a::dot(d, d);
-	float rad     = vol1.GetRadius() + vol2.GetRadius();
-	if (dist > rad * rad)
+
+	vec3a::type d = vec4::sub(vol1.spherical_vol, quad::negate_w(vol2.spherical_vol));
+	if (quad::hadd(quad::negate_w(vec4::mul(d, d))) > 0.0f)
 		return result_t::k_outside;
 	else
-		return (vec3a::GreaterAny(vec3a::abs(d),
-		                          vec3a::add(vol1.GetExtends(), vol2.GetExtends())))
+		return (vec3a::greater_any(vec3a::abs(vec3a::from_vec4(d)),
+		                          vec3a::add(vol1.half_extends, vol2.half_extends)))
 		           ? result_t::k_outside
-		           : result_t::k_outside;
+		           : result_t::k_intersecting;
 }
 
-VML_API result_t bounding_volume_frustum_coherent(bounding_volume_t const& vol,
-                                                  frustum const& frustum,
-                                                  frustum_t::coherency& coherency) {
-	std::uint32_t i, k = 1 << o_last_plane;
-	result_t result_t         = result_t::k_inside;
-	const plane::type* planes = frustum.GetPlanes();
-	outMask                   = 0;
-	if (k & i_mask) {
-		float m             = plane::dot(planes[o_last_plane], vol.GetExtends());
-		vec3a::type absNorm = plane::absNormal(planes[o_last_plane]);
-		float n             = vec3a::dot(absNorm, vol.GetExtends());
+VML_API result_t bounding_volume_frustum_coherent(bounding_volume_t const& i_vol,
+                                                  frustum_t const& i_frustum,
+                                                  frustum_t::coherency& i_coherency) {
 
-		if (m + n < 0)
-			return result_t::k_outside;
-		if (m - n < 0) {
-			outMask |= k;
-			result_t = result_t::k_intersecting;
-		}
-	}
-
-	std::uint32_t numPlanes = (std::uint32_t)frustum.Size();
-	for (i = 0, k = 1; i < numPlanes; i++, k += k) {
-		if ((i != o_last_plane) && (k & i_mask)) {
-			float m             = plane::dot(planes[i], vol.GetExtends());
-			vec3a::type absNorm = plane::absNormal(planes[i]);
-			float n             = vec3a::dot(absNorm, vol.GetExtends());
-
-			if (m + n < 0) {
-				o_last_plane = i;
+	result_t result         = result_t::k_inside;
+	auto planes = frustum::get_planes(i_frustum);
+	std::uint32_t out_mask                   = 0;
+	
+	for (std::uint32_t i = 0; i < planes.second; i++) {
+		std::uint32_t plane = (i + i_coherency.plane) % planes.second;
+		std::uint32_t k = 1 << plane;
+		if ((k & i_coherency.mask_hierarchy)) {
+			vec3a_t abs_norm = plane::abs_normal(planes.first[plane]);
+			auto m = plane::vdot(planes.first[plane], sphere::center(i_vol.spherical_vol));
+			auto n = vec3a::vdot(abs_norm, i_vol.half_extends);
+			if (quad::isnegative_x(quad::add_x(m, n))) {
+				i_coherency.plane = i;
 				return result_t::k_outside;
 			}
-			if (m - n < 0) {
-				outMask |= k;
-				result_t = result_t::k_intersecting;
+			if (quad::isnegative_x(quad::sub_x(m, n))) {
+				out_mask |= k;
+				result = result_t::k_intersecting;
 			}
 		}
 	}
-	return result_t;
+	return result;
 }
 
-VML_API result_t BoundingVolumeFrustum(bounding_volume_t const& vol,
-                                       frustum const& frustum) {
-	result_t result_t         = result_t::k_inside;
-	size_t numPlanes          = frustum.Size();
-	const plane::type* planes = frustum.GetPlanes();
-	for (size_t i = 0; i < numPlanes; ++i) {
-		float m             = plane::dot(planes[i], vol.GetExtends());
-		vec3a::type absNorm = plane::absNormal(planes[i]);
-		float n             = vec3a::dot(absNorm, vol.GetExtends());
+VML_API result_t bounding_volume_frustum(bounding_volume_t const& i_vol,
+                                                  frustum_t const& i_frustum) {
+	
+	auto planes = frustum::get_planes(i_frustum);
 
-		if (m + n < 0)
+	for (std::uint32_t i = 0; i < planes.second; i++) {
+		std::uint32_t plane = i;
+		vec3a_t abs_norm    = plane::abs_normal(planes.first[plane]);
+		auto m =
+		    plane::vdot(planes.first[plane], sphere::center(i_vol.spherical_vol));
+		auto n = vec3a::vdot(abs_norm, i_vol.half_extends);
+		if (quad::isnegative_x(quad::add_x(m, n)))
 			return result_t::k_outside;
-		if (m - n < 0)
-			result_t = result_t::k_intersecting;
+		
+		if (quad::isnegative_x(quad::sub_x(m, n)))
+			return result_t::k_intersecting;
 	}
-	return result_t;
+	return result_t::k_inside;
 }
+VML_API result_t bounding_sphere_frustum(sphere::pref i_sphere,
+                                       frustum_t const& i_frustum) {
 
-VML_API result_t bounding_sphere_frustum(vec3a::pref center, float radius,
-                                         frustum const& frustum) {
-	size_t numPlanes          = frustum.Size();
-	const plane::type* planes = frustum.GetPlanes();
-	for (size_t i = 0; i < numPlanes; ++i) {
-		float c = plane::dot(planes[i], center);
+	auto planes = frustum::get_planes(i_frustum);
+	for (std::uint32_t i = 0; i < planes.second; i++) {
+		std::uint32_t plane = i;
+		auto m =
+		    plane::vdot(planes.first[plane], sphere::center(i_sphere));
 		if (c > radius)
 			return result_t::k_outside;
 		if (c > -radius)

@@ -20,6 +20,7 @@ struct quad {
 	static inline bool isinf(pref v);
 	static inline type isnanv(pref v);
 	static inline type isinfv(pref v);
+	static inline bool isnegative_x(pref v);
 	static inline type set(scalar_type v);
 	static inline type set(scalar_type x, scalar_type y, scalar_type z);
 	static inline type set(scalar_type x, scalar_type y, scalar_type z,
@@ -43,6 +44,7 @@ struct quad {
 	static inline scalar_type get(pref v, std::uint32_t i);
 	static inline type abs(pref v);
 	static inline type negate(pref v);
+	static inline type negate_w(pref v);
 	static inline type add(pref a, pref b);
 	static inline type sub(pref a, pref b);
 	static inline type mul(pref a, pref b);
@@ -58,6 +60,7 @@ struct quad {
 	static inline type div(pref a, pref b);
 	static inline type madd(pref v, pref m, pref a);
 	static inline scalar_type hadd(pref q1);
+	static inline type vhadd(pref q1);
 	static inline bool greater_all(pref q1, pref q2);
 	static inline bool greater_any(pref q1, pref q2);
 	static inline bool lesser_all(pref q1, pref q2);
@@ -115,6 +118,14 @@ inline quad::type quad::isinfv(quad::pref v) {
 #else
 	return quad::set(real::isinf(v[0]), real::isinf(v[1]), real::isinf(v[2]),
 	                 real::isinf(v[3]));
+#endif
+}
+
+inline bool quad::isnegative_x(pref q) {
+#if VML_USE_SSE_AVX	
+	return _mm_cvtsi128_si32(vml_cast_v_to_i(_mm_cmpgt_ss(_mm_set_ps1(0.0f), q))) != 0;
+#else
+	return q[0] < 0.0f;
 #endif
 }
 
@@ -370,6 +381,16 @@ inline quad::type quad::negate(quad::pref q) {
 #endif
 }
 
+inline quad::type quad::negate(quad::pref q) {
+#if VML_USE_SSE_AVX
+	const __m128i k_sign =
+	    _mm_set_epi32(0x80000000, 0x00000000, 0x00000000, 0x00000000);
+	return _mm_xor_ps(q, vml_cast_i_to_v(k_sign));
+#else
+	return quad::set((q[0]), (q[1]), (q[2]), -(q[3]));
+#endif
+}
+
 inline quad::type quad::add(quad::pref a, quad::pref b) {
 #if VML_USE_SSE_AVX
 	return _mm_add_ps(a, b);
@@ -457,23 +478,42 @@ inline quad::type quad::madd(quad::pref a, quad::pref v, quad::pref c) {
 inline quad::scalar_type quad::hadd(quad::pref v) {
 #if VML_USE_SSE_AVX
 #if VML_USE_SSE_LEVEL >= 3
-	type q = _mm_hadd_ps(v, v); // latency 7
-	q      = _mm_hadd_ps(q, q); // latency 7
-	return x(q);
+	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
+	__m128 sums = _mm_add_ps(v, shuf);
+	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
+	sums        = _mm_add_ss(sums, shuf);
+	return x(sums);
 #else
-	type q    = v;
-	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 3, 2));
-	q         = _mm_add_ps(q, temp);
-	// x+z[0]+z[0]+z[1]+w
-	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 0));
-	// y+w, ??, ??, ??
-	temp = _mm_shuffle_ps(q, temp, _MM_SHUFFLE(0, 0, 0, 3));
-	// x+z+y+w,??, ??, ??
-	q = _mm_add_ss(q, temp);
-	return q;
+	__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1)); // [ C D | A B ]
+	__m128 sums = _mm_add_ps(v, shuf);       // sums = [ D+C C+D | B+A A+B ]
+	shuf        = _mm_movehl_ps(shuf, sums); //  [   C   D | D+C C+D ]  // let the
+	                                  //  compiler avoid a mov by reusing shuf
+	sums = _mm_add_ss(sums, shuf);
+	return x(sums);
 #endif
 #else
 	return v[0] + v[1] + v[2] + v[3];
+#endif
+}
+
+inline quad::type quad::vhadd(quad::pref v) {
+#if VML_USE_SSE_AVX
+#if VML_USE_SSE_LEVEL >= 3
+	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
+	__m128 sums = _mm_add_ps(v, shuf);
+	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
+	sums        = _mm_add_ss(sums, shuf);
+	return sums;
+#else
+	__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1)); // [ C D | A B ]
+	__m128 sums = _mm_add_ps(v, shuf);       // sums = [ D+C C+D | B+A A+B ]
+	shuf        = _mm_movehl_ps(shuf, sums); //  [   C   D | D+C C+D ]  // let the
+	                                  //  compiler avoid a mov by reusing shuf
+	sums = _mm_add_ss(sums, shuf);
+	return sums;
+#endif
+#else
+	return set(v[0] + v[1] + v[2] + v[3], 0.0f, 0.0f, 0.0f);
 #endif
 }
 
