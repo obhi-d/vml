@@ -108,7 +108,7 @@ struct frustum_t {
 	 * @param mat transpose(View*Projection) or transpose(Proj)*transpose(View)
 	 * matrix
 	 */
-	void build(mat4_t const& mat) {
+	void build(mat4_t const& combo) {
 		// Near clipping planeT
 		planes[k_near] = plane::normalize(vec4::negate(mat4::row(combo, 2)));
 		// Far clipping planeT

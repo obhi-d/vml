@@ -11,7 +11,6 @@ struct quad {
 	using cref = type const&;
 	using scalar_type = float;
 	using row_type    = float;
-	using scalar_type = float;
 
 	enum { element_count = 4 };
 
@@ -401,7 +400,7 @@ inline quad::type quad::negate(quad::pref q) {
 #endif
 }
 
-inline quad::type quad::negate(quad::pref q) {
+inline quad::type quad::negate_w(quad::pref q) {
 #if VML_USE_SSE_AVX
 	const __m128i k_sign =
 	    _mm_set_epi32(0x80000000, 0x00000000, 0x00000000, 0x00000000);
@@ -611,7 +610,7 @@ inline quad::type quad::normalize(quad::pref vec) {
 	// get the reciprocal
 	q = _mm_sqrt_ps(q);
 	return _mm_div_ps(vec, q);
-#else VML_USE_SSE_LEVEL >= 3
+#else
 	type q = vdot(vec, vec);
 	q = _mm_sqrt_ss(q);
 	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));

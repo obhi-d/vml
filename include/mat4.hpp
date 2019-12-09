@@ -28,7 +28,7 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	using typename mat_base<detail::mat4_traits>::scalar_type;
 
 	//! @brief Returns maximum scaling
-	static inline float max_scale(mat4 const&);
+	static inline float max_scale(mat4_t const&);
 	//! @brief Full matrix multiplication
 	static inline type mul(pref m1, pref m2);
 	//! @brief transform vertices assuming orthogonal matrix
@@ -91,6 +91,10 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	//! @brief inverse for orthogonal matrix
 	static inline type inverse_assume_ortho(pref m);
 };
+
+ inline float mat4::max_scale(mat4_t const& m) {
+	 return std::max(std::max(quad::sqlength(m.r[0]), quad::sqlength(m.r[1])), quad::sqlength(m.r[2]));
+ }
 
 inline mat4::type mat4::mul(pref m1, pref m2) {
 #if VML_USE_SSE_AVX
@@ -184,16 +188,20 @@ inline void mat4::transform_assume_ortho(
 	std::uint8_t* out_vec       = (std::uint8_t*)outstream;
 
 	for (std::uint32_t i = 0; i < count; i++) {
-		quad_t x   = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->x);
-		quad_t y   = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->y);
-		quad_t res = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->z);
+		quad_t x   = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec));
+		quad_t y   = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec) + 1);
+		quad_t res = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec) + 2);
 		res        = _mm_mul_ps(res, m.r[2]);
 		res        = _mm_add_ps(res, m.r[3]);
 		y          = _mm_mul_ps(y, m.r[1]);
 		res        = _mm_add_ps(res, y);
 		x          = _mm_mul_ps(x, m.r[0]);
 		res        = _mm_add_ps(res, x);
-		_mm_store_ps(reinterpret_cast<float*>(out_vec), res);
+
+		((float*)out_vec)[0] = quad::x(res);
+		((float*)out_vec)[1] = quad::y(res);
+		((float*)out_vec)[2] = quad::z(res);
+
 		inp_vec += inpstride;
 		out_vec += outstride;
 	}
@@ -232,19 +240,18 @@ inline void mat4::transform_assume_ortho(
 	std::uint8_t* inp_vec = (std::uint8_t*)io_stream;
 
 	for (std::uint32_t i = 0; i < count; i++) {
-		quad_t x   = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->x);
-		quad_t y   = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->y);
-		quad_t res = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->z);
+		quad_t x   = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec));
+		quad_t y   = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec) + 1);
+		quad_t res = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec) + 2);
 		res        = _mm_mul_ps(res, m.r[2]);
 		res        = _mm_add_ps(res, m.r[3]);
 		y          = _mm_mul_ps(y, m.r[1]);
 		res        = _mm_add_ps(res, y);
 		x          = _mm_mul_ps(x, m.r[0]);
 		res        = _mm_add_ps(res, x);
-		_mm_store_ps(store.s, res);
-		((float*)inp_vec)[0] = store.s[0];
-		((float*)inp_vec)[1] = store.s[1];
-		((float*)inp_vec)[2] = store.s[2];
+		((float*)inp_vec)[0] = quad::x(res);
+		((float*)inp_vec)[1] = quad::y(res);
+		((float*)inp_vec)[2] = quad::z(res);
 
 		inp_vec += i_stride;
 	}
@@ -283,9 +290,9 @@ inline void mat4::transform(pref m,
 	std::uint8_t* out_vec       = (std::uint8_t*)outstream;
 
 	for (std::uint32_t i = 0; i < count; i++) {
-		quad_t x   = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->x);
-		quad_t y   = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->y);
-		quad_t res = _mm_load_ps1(&reinterpret_cast<const vec3_t*>(inp_vec)->z);
+		quad_t x   = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec));
+		quad_t y   = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec) + 1);
+		quad_t res = _mm_load_ps1(reinterpret_cast<const float*>(inp_vec) + 2);
 		res        = _mm_mul_ps(res, m.r[2]);
 		res        = _mm_add_ps(res, m.r[3]);
 		y          = _mm_mul_ps(y, m.r[1]);
@@ -295,11 +302,11 @@ inline void mat4::transform(pref m,
 
 		x   = _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 3, 3, 3));
 		res = _mm_div_ps(res, x);
-		_mm_store_ss(&reinterpret_cast<vec3_t*>(out_vec)->x, res);
+		_mm_store_ss(reinterpret_cast<float*>(out_vec), res);
 		res = _mm_shuffle_ps(res, res, _MM_SHUFFLE(0, 3, 2, 1));
-		_mm_store_ss(&reinterpret_cast<vec3_t*>(out_vec)->y, res);
+		_mm_store_ss(reinterpret_cast<float*>(out_vec) + 1, res);
 		res = _mm_shuffle_ps(res, res, _MM_SHUFFLE(0, 3, 2, 1));
-		_mm_store_ss(&reinterpret_cast<vec3_t*>(out_vec)->z, res);
+		_mm_store_ss(reinterpret_cast<float*>(out_vec) + 2, res);
 		inp_vec += inpstride;
 		out_vec += outstride;
 	}
@@ -485,7 +492,7 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
                                                   quat::pref rot,
                                                   vec3a::pref pos) {
 #if VML_USE_SSE_AVX
-	constexpr __m128 fff0 =
+	const __m128 fff0 =
 	    vml_cast_i_to_v(_mm_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF));
 	
 	quad_t r0, r1, r2;
@@ -499,7 +506,7 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
 	v0 = _mm_and_ps(v0, fff0);
 	v1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 1, 2, 2));
 	v1 = _mm_and_ps(v1, fff0);
-	r0 = _mm_sub_ps(N3D_1110, v0);
+	r0 = _mm_sub_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), v0);
 	r0 = _mm_sub_ps(r0, v1);
 
 	v0 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 1, 0, 0));
@@ -604,10 +611,10 @@ inline mat4::type mat4::from_translation(
     vec3a::pref pos) {
 #if VML_USE_SSE_AVX
 	mat4_t ret;
-	ret.r[0] = N3D_1000;
-	ret.r[1] = N3D_0100;
-	ret.r[2] = N3D_0010;
-	ret.r[3] = _mm_or_ps(_mm_and_ps(pos, N3D_FFFO), N3D_0001);
+	ret.r[0] = _mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f);
+	ret.r[1] = _mm_set_ps(0.0f, 0.0f, 1.0f, 0.0f);
+	ret.r[2] = _mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f);
+	ret.r[3] = _mm_or_ps(vec3a::from_vec4(pos), _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f));
 	return ret;
 #else
 	mat4_t ret;
@@ -637,7 +644,7 @@ inline mat4::type mat4::from_quat(
 	set_rotation(ret, rot);
 
 #if VML_USE_SSE_AVX
-	ret.r[3] = N3D_0001;
+	ret.r[3] = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);
 #else
 	ret.e[3][0]       = 0;
 	ret.e[3][1]       = 0;
@@ -675,22 +682,22 @@ inline mat4::type mat4::from_look_at(
 inline mat4::type mat4::from_orthographic_projection(
     scalar_type w, scalar_type h, scalar_type zn, scalar_type zf) {
 	float dzRecip = 1.0f / (zf - zn);
-	return {2 / w,
-	        0,
-	        0,
-	        0,
-	        0,
-	        2 / h,
-	        0,
-	        0,
-	        0,
-	        0,
-	        -2 * dzRecip,
-	        0,
-	        0,
-	        0,
+	return {2.0f / w,
+	        0.0f,
+	        0.0f,
+	        0.0f,
+	        0.0f,
+	        2.0f / h,
+	        0.0f,
+	        0.0f,
+	        0.0f,
+	        0.0f,
+	        -2.0f * dzRecip,
+	        0.0f,
+	        0.0f,
+	        0.0f,
 	        -(zn + zf) * dzRecip,
-	        1};
+	        1.0f};
 }
 
 inline mat4::type mat4::from_perspective_projection(
@@ -916,17 +923,17 @@ inline mat4::type mat4::inverse(pref m) {
 	C6 = _mm_shuffle_ps(C6, C6, _MM_SHUFFLE(3, 1, 2, 0));
 	// get the determinate
 #ifdef L_USE_FAST_DIVISION
-	quad_t v_temp = quad::splat_x(_mm_rcp_ss(quad::VDot(C0, MT.r[0])));
+	quad_t v_temp = quad::splat_x(_mm_rcp_ss(quad::vdot(C0, MT.r[0])));
 #else
 	quad_t v_temp =
-	    quad::splat_x(_mm_div_ss(N3D_1000, quad::VDot(C0, MT.r[0])));
+	    quad::splat_x(_mm_div_ss(_mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f), quad::vdot(C0, MT.r[0])));
 #endif
-	mat4_t mResult;
-	mResult.r[0] = _mm_mul_ps(C0, v_temp);
-	mResult.r[1] = _mm_mul_ps(C2, v_temp);
-	mResult.r[2] = _mm_mul_ps(C4, v_temp);
-	mResult.r[3] = _mm_mul_ps(C6, v_temp);
-	return mResult;
+	mat4_t result;
+	result.r[0] = _mm_mul_ps(C0, v_temp);
+	result.r[1] = _mm_mul_ps(C2, v_temp);
+	result.r[2] = _mm_mul_ps(C4, v_temp);
+	result.r[3] = _mm_mul_ps(C6, v_temp);
+	return result;
 
 #else
 	mat4_t inv;
@@ -1029,9 +1036,9 @@ inline mat4::type mat4::inverse_assume_ortho(pref m) {
 	v_temp        = _mm_shuffle_ps(m.r[3], m.r[3], _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp        = _mm_mul_ps(v_temp, ret.r[2]);
 	ret.r[3]     = _mm_add_ps(ret.r[3], v_temp);
-	ret.r[3]     = _mm_xor_ps(ret.r[3], N3D_FlipSign);
+	ret.r[3]     = _mm_xor_ps(ret.r[3], vml_cast_i_to_v(_mm_set1_epi32(0x80000000)));
 	// and with 0001
-	ret.r[3] = _mm_or_ps(_mm_and_ps(ret.r[3], N3D_FFFO), N3D_0001);
+	ret.r[3] = _mm_or_ps(_mm_and_ps(ret.r[3], VML_CLEAR_W_VEC), VML_XYZ0_W1_VEC);
 
 	assert(ret.e[0][3] == 0.f && ret.e[1][3] == 0.f && ret.e[2][3] == 0.f &&
 	         ret.e[3][3] == 1.f);

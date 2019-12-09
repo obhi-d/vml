@@ -89,7 +89,7 @@ inline void bounding_volume::nullify(bounding_volume_t& _) {
 inline void bounding_volume::from_box(bounding_volume_t& _,
                                       vec3a_t const& center,
                                       vec3a_t const& half_extends) {
-	_.spherical_vol = _.orig_spherical_vol = sphere::set(center, sphere::max_radius(vec3a::mul(half_extends, 2.0f));
+	_.spherical_vol = _.orig_spherical_vol = sphere::set(center, sphere::max_radius(vec3a::mul(half_extends, 2.0f)));
 	_.half_extends = _.orig_half_extends = half_extends;
 }
 
@@ -112,7 +112,7 @@ inline void bounding_volume::update(bounding_volume_t& _, mat4::pref m) {
 	    sphere::set(
 	        mat4::transform_assume_ortho(m, sphere::center(_.orig_spherical_vol)),
 	        sphere::radius(_.spherical_vol)),
-	    mat4::max_scale(_));
+	    mat4::max_scale(m));
 
 	_.half_extends = mat4::transform_bounds_extends(m, _.orig_half_extends);
 }
@@ -126,13 +126,13 @@ inline void bounding_volume::update(bounding_volume_t& _, float scale,
 	                   translation),
 	        sphere::radius(_.spherical_vol)),
 	    scale);
-	_.half_extends = quat::transform_bounds_extends(
+	_.half_extends = quat::transform_bounds(
 	    rot, vec3a::mul(_.orig_half_extends, scale));
 }
 
 inline void bounding_volume::update(bounding_volume_t& _,
                                     transform_t const& tf) {
-	update(_, transform::scaling(tf), transform::rotation(tf),
+	update(_, transform::scale(tf), transform::rotation(tf),
 	       transform::translation(tf));
 }
 
@@ -154,9 +154,9 @@ inline void bounding_volume::update(bounding_volume_t& _,
 
 	_.spherical_vol =
 	    vec3a::set_w(vec3a::half(b),
-	                 vec3a::add_x(vec3a::add_x(vec3a::vradius(vol.spherical_vol),
-	                                           vec3a::vradius(_.spherical_vol)),
-	                              vec3a::vdot(a, a)));
+	                 quad::x(vec3a::add_x(vec3a::add_x(sphere::vradius(vol.spherical_vol),
+	                                           sphere::vradius(_.spherical_vol)),
+	                              vec3a::vdot(a, a))));
 	_.half_extends = vec3a::add(a, vec3a::add(vol.half_extends, _.half_extends));
 	_.orig_spherical_vol = _.spherical_vol;
 	_.orig_half_extends  = _.half_extends;

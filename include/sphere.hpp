@@ -6,7 +6,7 @@ namespace vml {
 struct sphere : public quad {
 	using quad::set;
 	inline static sphere_t set(vec3a::pref _, float radius);
-	inline quad_t vradius(quad::pref _);
+	inline static quad_t vradius(quad::pref _);
 	inline static float radius(quad::pref _);
 	inline static vec3a_t center(quad::pref _);
 	inline static float max_radius(vec3a_t const&);
@@ -25,7 +25,7 @@ inline vec3a_t sphere::center(quad::pref _) { return vec3a::from_vec4(_); }
 inline float sphere::max_radius(vec3a_t const& _) {
 	return vec3a::length(_);
 }
-inline static sphere_t sphere::scale_radius(sphere::pref p, float scale) {
+inline sphere_t sphere::scale_radius(sphere::pref p, float scale) {
 	return quad::mul(p, quat::set(1.0f, 1.0f, 1.0f, scale));
 }
 } // namespace vml

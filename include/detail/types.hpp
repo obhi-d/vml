@@ -32,7 +32,8 @@ struct mat4_t {
   };
 
   mat4_t() {};
-  mat4_t(std::initializer_list<float> v) : m(v) {}
+  template <typename ...ScalarType>
+  mat4_t(ScalarType...args) : m{static_cast<scalar_t>(args)...} {}
 };
 
 template <typename scalar_t>
@@ -45,7 +46,8 @@ struct mat3_t {
     scalar_t e[3][4];
   };
   mat3_t() {};
-  mat3_t(std::initializer_list<float> v) : m(v) {}
+  template <typename ...ScalarType>
+  mat3_t(ScalarType...args) : m{static_cast<scalar_t>(args)...} {}
 };
 
 bool constexpr is_pref_cref = false;

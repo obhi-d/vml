@@ -22,7 +22,7 @@ struct transform {
 	static inline float scale(transform_t const& _);
 	static inline void set_translation(transform_t& _, vec3a_t const&);
 	static inline void set_rotation(transform_t& _, quat_t const&);
-	static inline void set_scale(transform_t const& _, float);
+	static inline void set_scale(transform_t& _, float);
 	static inline transform_t combine(transform_t const& parent_combined,
 	                                  transform_t const& local);
 	static inline vec3a_t mul(vec3a::pref p, transform_t const& _);
@@ -63,7 +63,7 @@ inline void transform::set_translation(transform_t& _, vec3a_t const& v) {
 inline void transform::set_rotation(transform_t& _, quat_t const& r) {
 	_.rotation = r;
 }
-inline void transform::set_scale(transform_t const& _, float scale) {
+inline void transform::set_scale(transform_t& _, float scale) {
 	_.translation_and_scale = vec4::set_w(_.translation_and_scale, scale);
 }
 inline transform_t transform::combine(transform_t const& parent_combined,

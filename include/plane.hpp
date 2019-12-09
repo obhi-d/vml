@@ -56,7 +56,7 @@ inline vec3a_t plane::vdot(pref p, pref v) {
 
 inline float plane::dot(pref p, pref v) {
 #if VML_USE_SSE_AVX
-	return quad::x(vdot(p, q));
+	return quad::x(vdot(p, v));
 #else
 	return set(p[0] * v[0] + p[1] * v[1] + p[2] * v[2] + p[3], 0, 0, 0);
 #endif

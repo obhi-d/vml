@@ -12,7 +12,6 @@ struct real {
 	using cref        = type;
 	using scalar_type   = float;
 	using row_type    = float;
-	using scalar_type = float;
 	enum { element_count = 1 };
 
 	inline static bool equals(pref v1, pref v2) {

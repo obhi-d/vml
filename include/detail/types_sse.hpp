@@ -4,7 +4,6 @@
 #if VML_USE_SSE_LEVEL >= 2
 #define USE_SSE2
 #endif
-#include "avx_mathfun.h"
 #include "sse_mathfun.h"
 
 namespace vml {
@@ -14,10 +13,8 @@ namespace sse_types {
 
 template <typename scalar_t>
 struct quad_type { using type = std::array<scalar_t, 4>; };
-template <> struct quad_type<double> { using type = __m256; };
 template <> struct quad_type<float> { using type = __m128; };
 template <> struct quad_type<std::int32_t> { using type = __m128i; };
-template <> struct quad_type<std::int64_t> { using type = __m256i; };
 
 template <typename scalar_t> using quad_t         = typename quad_type<scalar_t>::type;
 template <typename scalar_t> using vec2_t         = std::array<scalar_t, 2>;
@@ -44,7 +41,8 @@ struct mat4_t {
   };
 
   mat4_t() {};
-  mat4_t(std::initializer_list<float> v) : m(v) {}
+  template <typename ...ScalarType>
+  mat4_t(ScalarType...args) : m{static_cast<scalar_t>(args)...} {}
 };
 
 template <typename scalar_t>
@@ -57,7 +55,8 @@ struct mat3_t {
     scalar_t e[3][4];
   };
   mat3_t() {};
-  mat3_t(std::initializer_list<float> v) : m(v) {}
+  template <typename ...ScalarType>
+  mat3_t(ScalarType...args) : m{static_cast<scalar_t>(args)...} {}
 };
 
 bool constexpr is_pref_cref = false;

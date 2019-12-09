@@ -11,6 +11,7 @@ struct aabb_traits {
 	using cref = type const&;
 	using scalar_type = float;
 	using row_type    = types::vec4_t<scalar_type>;
+	using row_tag = vec4_t;
 
 	enum { element_count = 8 };
 	enum { row_count = 2 };
@@ -77,6 +78,6 @@ inline aabb::type aabb::append(pref box, pref other) {
 #endif
 }
 inline aabb::type aabb::set(vec3a::pref center, vec3a::pref extends) {
-	return {vec3A::sub(center, extends), vec3A::add(center, extends)};
+	return {vec3a::sub(center, extends), vec3a::add(center, extends)};
 }
 } // namespace vml

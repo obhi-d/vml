@@ -38,7 +38,7 @@ template <typename concrete>
 inline typename multi_dim<concrete>::type multi_dim<concrete>::add(pref m1,
                                                                    pref m2) {
 	type r;
-	for (unsigned int i = 0; i < _rows; ++i)
+	for (unsigned int i = 0; i < concrete::row_count; ++i)
 		r.r[i] = row_tag::add(m1.r[i], m2.r[i]);
 	return r;
 }
@@ -47,7 +47,7 @@ template <typename concrete>
 inline typename multi_dim<concrete>::type multi_dim<concrete>::sub(pref m1,
                                                                    pref m2) {
 	type r;
-	for (unsigned int i = 0; i < _rows; ++i)
+	for (unsigned int i = 0; i < concrete::row_count; ++i)
 		r.r[i] = row_tag::sub(m1.r[i], m2.r[i]);
 	return r;
 }

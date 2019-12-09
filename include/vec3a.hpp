@@ -86,6 +86,7 @@ inline vec3a::type vec3a::vdot(pref vec1, pref vec2) {
 #if VML_USE_SSE_LEVEL >= 4
 	return _mm_dp_ps(vec1, vec2, 0x7F);
 #elif VML_USE_SSE_LEVEL >= 3
+	__m128 v    = _mm_mul_ps(vec1, vec2);
 	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
 	__m128 sums = _mm_add_ps(v, shuf);
 	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
@@ -104,7 +105,7 @@ inline vec3a::type vec3a::vdot(pref vec1, pref vec2) {
 #endif
 }
 
-inline vec3a::type vec3a::cross(pref q1, pref q2) {
+inline vec3a::type vec3a::cross(pref vec1, pref vec2) {
 #if VML_USE_SSE_AVX
 	// y1,z1,x1,w1
 	type vTemp1 = _mm_shuffle_ps(vec1, vec1, _MM_SHUFFLE(3, 0, 2, 1));
@@ -153,18 +154,18 @@ inline bool vec3a::lesser_all(pref q1, pref q2) { return greater_any(q2, q1); }
 
 inline bool vec3a::lesser_any(pref q1, pref q2) { return greater_all(q2, q1); }
 
-inline vec3a::tye vec3a::mul(pref q1, mat4_t const& m) {
+inline vec3a::type vec3a::mul(pref v, mat4_t const& m) {
 #if VML_USE_SSE_AVX
 	type ret;
-	ret        = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-	ret        = _mm_mul_ps(ret, m[0]);
+	ret         = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+	ret         = _mm_mul_ps(ret, m.r[0]);
 	type v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
-	v_temp      = _mm_mul_ps(v_temp, m[1]);
-	ret        = _mm_add_ps(ret, v_temp);
+	v_temp      = _mm_mul_ps(v_temp, m.r[1]);
+	ret         = _mm_add_ps(ret, v_temp);
 	v_temp      = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
-	v_temp      = _mm_mul_ps(v_temp, m[2]);
-	ret        = _mm_add_ps(ret, v_temp);
-	ret        = _mm_add_ps(ret, m[3]);
+	v_temp      = _mm_mul_ps(v_temp, m.r[2]);
+	ret         = _mm_add_ps(ret, v_temp);
+	ret         = _mm_add_ps(ret, m.r[3]);
 	return ret;
 #else
 	type r, x, y, z;
@@ -173,9 +174,9 @@ inline vec3a::tye vec3a::mul(pref q1, mat4_t const& m) {
 	y = splat_y(v);
 	x = splat_x(v);
 
-	r = madd(z, m[2], m[3]);
-	r = madd(y, m[1], r);
-	r = madd(x, m[0], r);
+	r = madd(z, m.r[2], m.r[3]);
+	r = madd(y, m.r[1], r);
+	r = madd(x, m.r[0], r);
 
 	return r;
 #endif

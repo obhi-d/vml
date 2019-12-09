@@ -6,16 +6,14 @@
 
 namespace vml {
 
-template <typename concrete>
-struct vec_base : public concrete {
+template <typename concrete> struct vec_base : public concrete {
 
-	using type      = typename concrete::type;
-	using ref       = typename concrete::ref;
-	using pref      = typename concrete::pref;
-	using cref      = typename concrete::cref;
+	using type        = typename concrete::type;
+	using ref         = typename concrete::ref;
+	using pref        = typename concrete::pref;
+	using cref        = typename concrete::cref;
 	using scalar_type = typename concrete::scalar_type;
-	using row_type  = typename concrete::row_type;
-	using scalar_type = typename concrete::scalar_type;
+	using row_type    = typename concrete::row_type;
 	enum { element_count = concrete::element_count };
 
 	static inline bool equals(pref v1, pref v2);
@@ -26,7 +24,8 @@ struct vec_base : public concrete {
 	static inline type set(scalar_type v);
 	static inline type set(scalar_type x, scalar_type y);
 	static inline type set(scalar_type x, scalar_type y, scalar_type z);
-	static inline type set(scalar_type x, scalar_type y, scalar_type z, scalar_type w);
+	static inline type set(scalar_type x, scalar_type y, scalar_type z,
+	                       scalar_type w);
 	static inline type set(scalar_type const* v);
 	static inline type set_unaligned(scalar_type const* v);
 	static inline type x(pref v, scalar_type x);
@@ -90,51 +89,44 @@ template <typename concrete> inline bool vec_base<concrete>::isinf(pref v) {
 	return false;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::isnanv(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::isnanv(pref v) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = (v[i] != v[i]);
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::isinfv(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::isinfv(pref v) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = (scalar_type)real::isinf(v[i]);
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::set(scalar_type v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::set(
+    scalar_type v) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = v;
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::set(scalar_type x,
-                                                      scalar_type y) {
+inline typename vec_base<concrete>::type vec_base<concrete>::set(
+    scalar_type x, scalar_type y) {
 	return {x, y};
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::set(scalar_type x, scalar_type y,
-                                                      scalar_type z) {
+inline typename vec_base<concrete>::type vec_base<concrete>::set(
+    scalar_type x, scalar_type y, scalar_type z) {
 	return {x, y, z};
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::set(scalar_type x, scalar_type y,
-                                                      scalar_type z,
-                                   scalar_type w) {
+inline typename vec_base<concrete>::type vec_base<concrete>::set(
+    scalar_type x, scalar_type y, scalar_type z, scalar_type w) {
 	return {x, y, z, w};
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::set(scalar_type const* v) {
-	type ret;
-	for (std::uint32_t i = 0; i < element_count; ++i)
-		ret[i] = v[i];
-	return ret;
-}
-template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::set_unaligned(
+inline typename vec_base<concrete>::type vec_base<concrete>::set(
     scalar_type const* v) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
@@ -142,7 +134,16 @@ inline vec_base<concrete>::type vec_base<concrete>::set_unaligned(
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::x(pref v, scalar_type x) {
+inline typename vec_base<concrete>::type vec_base<concrete>::set_unaligned(
+    scalar_type const* v) {
+	type ret;
+	for (std::uint32_t i = 0; i < element_count; ++i)
+		ret[i] = v[i];
+	return ret;
+}
+template <typename concrete>
+inline typename vec_base<concrete>::type vec_base<concrete>::x(pref v,
+                                                               scalar_type x) {
 	if constexpr (element_count == 1)
 		return {x};
 	else if constexpr (element_count == 2)
@@ -158,7 +159,8 @@ inline vec_base<concrete>::type vec_base<concrete>::x(pref v, scalar_type x) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::y(pref v, scalar_type y) {
+inline typename vec_base<concrete>::type vec_base<concrete>::y(pref v,
+                                                               scalar_type y) {
 	if constexpr (element_count == 1)
 		return v;
 	else if constexpr (element_count == 2)
@@ -174,7 +176,8 @@ inline vec_base<concrete>::type vec_base<concrete>::y(pref v, scalar_type y) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::z(pref v, scalar_type z) {
+inline typename vec_base<concrete>::type vec_base<concrete>::z(pref v,
+                                                               scalar_type z) {
 	if constexpr (element_count == 1)
 		return v;
 	else if constexpr (element_count == 2)
@@ -190,7 +193,8 @@ inline vec_base<concrete>::type vec_base<concrete>::z(pref v, scalar_type z) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::w(pref v, scalar_type w) {
+inline typename vec_base<concrete>::type vec_base<concrete>::w(pref v,
+                                                               scalar_type w) {
 	if constexpr (element_count == 1)
 		return v;
 	else if constexpr (element_count == 2)
@@ -206,27 +210,27 @@ inline vec_base<concrete>::type vec_base<concrete>::w(pref v, scalar_type w) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::x(pref v) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::x(pref v) {
 	return v[0];
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::y(pref v) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::y(pref v) {
 	return v[1];
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::z(pref v) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::z(pref v) {
 	return v[2];
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::w(pref v) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::w(pref v) {
 	return v[3];
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::zero() {
+inline typename vec_base<concrete>::type vec_base<concrete>::zero() {
 	return {};
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::splat_x(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::splat_x(pref v) {
 	constexpr std::uint32_t k_index = 0;
 	if constexpr (element_count == 1)
 		return {v[k_index]};
@@ -244,7 +248,7 @@ inline vec_base<concrete>::type vec_base<concrete>::splat_x(pref v) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::splat_y(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::splat_y(pref v) {
 	constexpr std::uint32_t k_index = 1;
 	if constexpr (element_count == 2)
 		return {v[k_index], v[k_index]};
@@ -260,7 +264,7 @@ inline vec_base<concrete>::type vec_base<concrete>::splat_y(pref v) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::splat_z(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::splat_z(pref v) {
 	constexpr std::uint32_t k_index = 2;
 	if constexpr (element_count == 3)
 		return {v[k_index], v[k_index], v[k_index]};
@@ -274,7 +278,7 @@ inline vec_base<concrete>::type vec_base<concrete>::splat_z(pref v) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::splat_w(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::splat_w(pref v) {
 	constexpr std::uint32_t k_index = 3;
 	if constexpr (element_count == 4)
 		return {v[k_index], v[k_index], v[k_index], v[k_index]};
@@ -286,8 +290,8 @@ inline vec_base<concrete>::type vec_base<concrete>::splat_w(pref v) {
 	}
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::select(pref v1, pref v2,
-                                                         pref control) {
+inline typename vec_base<concrete>::type vec_base<concrete>::select(
+    pref v1, pref v2, pref control) {
 	type ret;
 	std::uint32_t* iret = reinterpret_cast<std::uint32_t*>(&ret);
 	std::uint32_t* iv1  = reinterpret_cast<std::uint32_t*>(&v1);
@@ -298,81 +302,91 @@ inline vec_base<concrete>::type vec_base<concrete>::select(pref v1, pref v2,
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::get(pref v,
-                                                           std::uint32_t i) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::get(
+    pref v, std::uint32_t i) {
 	return v[i];
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::abs(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::abs(pref v) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = std::abs(v[i]);
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::negate(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::negate(pref v) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = -(v[i]);
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::add(pref a, pref b) {
+inline typename vec_base<concrete>::type vec_base<concrete>::add(pref a,
+                                                                 pref b) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] + b[i];
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::sub(pref a, pref b) {
+inline typename vec_base<concrete>::type vec_base<concrete>::sub(pref a,
+                                                                 pref b) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] - b[i];
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::mul(pref a, pref b) {
+inline typename vec_base<concrete>::type vec_base<concrete>::mul(pref a,
+                                                                 pref b) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] * b[i];
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::mul(pref a, scalar_type b) {
+inline typename vec_base<concrete>::type vec_base<concrete>::mul(
+    pref a, scalar_type b) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] * b;
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::mul(scalar_type b, pref a) {
+inline typename vec_base<concrete>::type vec_base<concrete>::mul(scalar_type b,
+                                                                 pref a) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] * b;
 	return ret;
 }
-template <typename concrete> inline type vec_base<concrete>::half(pref a) {
+template <typename concrete>
+inline typename vec_base<concrete>::type vec_base<concrete>::half(pref a) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] / 2;
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::div(pref a, pref b) {
+inline typename vec_base<concrete>::type vec_base<concrete>::div(pref a,
+                                                                 pref b) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = a[i] / b[i];
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::madd(pref v, pref m, pref a) {
+inline typename vec_base<concrete>::type vec_base<concrete>::madd(pref v,
+                                                                  pref m,
+                                                                  pref a) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = (v[i] * m[i]) + a[i];
 	return ret;
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::hadd(pref q1) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::hadd(
+    pref q) {
 	if constexpr (element_count == 1)
 		return {q[0]};
 	else if constexpr (element_count == 2)
@@ -382,9 +396,9 @@ inline vec_base<concrete>::scalar_type vec_base<concrete>::hadd(pref q1) {
 	else if constexpr (element_count == 4)
 		return q[0] + q[1] + q[2] + q[3];
 	else {
-		scalar_type ret = v[0];
+		scalar_type ret = q[0];
 		for (std::uint32_t i = 1; i < element_count; ++i)
-			ret[i] += v[i];
+			ret[i] += q[i];
 		return ret;
 	}
 }
@@ -417,42 +431,47 @@ inline bool vec_base<concrete>::lesser_any(pref q1, pref q2) {
 	return false;
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::vdot(pref q1, pref q2) {
+inline typename vec_base<concrete>::type vec_base<concrete>::vdot(pref q1,
+                                                                  pref q2) {
 	return {dot(q1, q2)};
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::dot(pref q1, pref q2) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::dot(
+    pref q1, pref q2) {
 	return hadd(mul(q1, q2));
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::sqlength(pref c1) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::sqlength(
+    pref c1) {
 	return (dot(c1, c1));
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::length(pref c1) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::length(
+    pref c1) {
 	return std::sqrt(sqlength(c1));
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::distance(pref vec1,
-                                                                  pref vec2) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::distance(
+    pref vec1, pref vec2) {
 	return length(sub(vec2, vec1));
 }
 template <typename concrete>
-inline vec_base<concrete>::scalar_type vec_base<concrete>::sqdistance(pref vec1,
-                                                                    pref vec2) {
+inline typename vec_base<concrete>::scalar_type vec_base<concrete>::sqdistance(
+    pref vec1, pref vec2) {
 	return sqlength(sub(vec2, vec1));
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::normalize(pref v) {
+inline typename vec_base<concrete>::type vec_base<concrete>::normalize(pref v) {
 	return mul(v, vml::recip_sqrt(sqlength(v)));
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::lerp(pref src, pref dest,
-                                                       scalar_type t) {
+inline typename vec_base<concrete>::type vec_base<concrete>::lerp(
+    pref src, pref dst, scalar_type t) {
 	return madd(set(t), sub(dst, src), src);
 }
 template <typename concrete>
-inline vec_base<concrete>::type vec_base<concrete>::recip_sqrt(pref qpf) {
+inline typename vec_base<concrete>::type vec_base<concrete>::recip_sqrt(
+    pref qpf) {
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = vml::recip_sqrt(qpf[i]);

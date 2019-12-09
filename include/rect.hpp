@@ -21,6 +21,12 @@ struct rect_traits {
 };
 
 template <typename traits> struct rect_base : public multi_dim<traits> {
+	using typename multi_dim<traits>::type;
+	using typename multi_dim<traits>::scalar_type;
+	using typename multi_dim<traits>::row_type;
+	using typename multi_dim<traits>::row_tag;
+	using typename multi_dim<traits>::pref;
+
 	static inline type set(scalar_type left, scalar_type top, scalar_type right,
 	                       scalar_type bottom) {
 		return {{left, top}, {right, bottom}};

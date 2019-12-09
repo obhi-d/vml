@@ -12,8 +12,7 @@ struct vec3_traits {
 	using cref      = type const&;
 	using scalar_type = float;
 	using row_type  = float;
-	using scalar_type = float;
-
+	
 	enum { element_count = 3 };
 };
 } // namespace detail
