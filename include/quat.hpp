@@ -107,7 +107,7 @@ inline quat::type quat::from_mat3(mat3_t const& m) {
 inline quat::type quat::mul(pref q1, pref q2) {
 #if VML_USE_SSE_AVX
 #if VML_USE_SSE_LEVEL >= 3
-#define _mm_pshufd(r, i) __m128(_mm_shuffle_epi32(__m128i(r), i))
+#define _mm_pshufd(r, i) vml_cast_i_to_v(_mm_shuffle_epi32(vml_cast_v_to_i(r), i))
 	// @link
 	// http://momchil-velikov.blogspot.com/2013/10/fast-sse-quternion-multiplication.html
 	// Copy to SSE registers and use as few as possible for x86
