@@ -1,7 +1,0 @@
-{
-  "files.associations": {
-    "type_traits": "cpp",
-    "cstdint": "cpp"
-  },
-  "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
-}
