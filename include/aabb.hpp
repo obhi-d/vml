@@ -20,15 +20,26 @@ struct aabb_traits {
 } // namespace detail
 
 struct aabb : public mat_base<detail::aabb_traits> {
+	//! Returns true if AABB is valid
 	static inline bool is_valid(pref box);
+	//! Returns the AABB center
 	static inline vec3a_t center(pref box);
+	//! Returns the AABB full-size
 	static inline vec3a_t size(pref box);
+	//! Returns the AABB half-size
 	static inline vec3a_t half_size(pref box);
+	//! Returns an AABB corner point, i must be between (0, 8]
 	static inline vec3a_t corner(pref box, unsigned int i);
+	//! Append a point to an existing box to return a new box
 	static inline type append(pref box, vec3a::pref point);
+	//! Append a box to an existing box to return a new box
 	static inline type append(pref box, pref other);
+	//! Set an AABB using center and half-size  
 	static inline type set(vec3a::pref center, vec3a::pref extends);
+	//! Set min and max point for AABB
+	static inline type set_min_max(vec3a::pref i_min, vec3a::pref i_max);
 };
+
 inline bool vml::aabb::is_valid(pref box) {
 #if VML_USE_SSE_AVX
 	return _mm_movemask_epi8(_mm_castps_si128(_mm_cmplt_ps(box[1], box[0]))) == 0;
@@ -79,5 +90,8 @@ inline aabb::type aabb::append(pref box, pref other) {
 }
 inline aabb::type aabb::set(vec3a::pref center, vec3a::pref extends) {
 	return {vec3a::sub(center, extends), vec3a::add(center, extends)};
+}
+inline aabb::type aabb::set_min_max(vec3a::pref i_min, vec3a::pref i_max) {
+	return {i_min, i_max};
 }
 } // namespace vml
