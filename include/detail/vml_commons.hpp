@@ -133,7 +133,7 @@
 namespace vml {
 
 template <typename pointer_arg = void>
-pointer_arg* allocate(std::size_t amount, std::size_t alignment) {
+inline pointer_arg* allocate(std::size_t amount, std::size_t alignment) {
 #ifdef _MSC_VER
 	return reinterpret_cast<pointer_arg*>(_aligned_malloc(amount, alignment));
 #else
@@ -141,7 +141,8 @@ pointer_arg* allocate(std::size_t amount, std::size_t alignment) {
 #endif
 }
 
-void deallocate(void* mem, std::size_t size) {
+template <typename pointer_arg = void>
+inline void deallocate(pointer_arg* mem, std::size_t size) {
 #ifdef _MSC_VER
 	return _aligned_free(mem);
 #else

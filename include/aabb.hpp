@@ -80,10 +80,10 @@ inline aabb::type aabb::append(pref box, pref other) {
 #if VML_USE_SSE_AVX
 	return {_mm_min_ps(box[0], other[0]), _mm_max_ps(box[1], other[1])};
 #else
-	aabb ret;
+	aabb_t ret;
 	for (int i = 0; i < 3; ++i) {
 		ret[0][i] = (box[0][i] > other[0][i]) ? other[0][i] : box[0][i];
-		ret[1][i] = (box[1][i] < other[1][i]) ? box[1][i] : other[1][i];
+		ret[1][i] = (box[1][i] < other[1][i]) ? other[1][i] : box[1][i];
 	}
 	return ret;
 #endif

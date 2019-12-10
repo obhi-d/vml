@@ -93,7 +93,7 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 };
 
  inline float mat4::max_scale(mat4_t const& m) {
-	 return std::max(std::max(quad::sqlength(m.r[0]), quad::sqlength(m.r[1])), quad::sqlength(m.r[2]));
+	 return vml::sqrt(std::max(std::max(quad::sqlength(m.r[0]), quad::sqlength(m.r[1])), quad::sqlength(m.r[2])));
  }
 
 inline mat4::type mat4::mul(pref m1, pref m2) {

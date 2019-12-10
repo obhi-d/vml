@@ -93,6 +93,7 @@ inline vec3a::type vec3a::vdot(pref vec1, pref vec2) {
 	sums        = _mm_add_ss(sums, shuf);
 	return sums;
 #else
+	__m128 v    = _mm_mul_ps(vec1, vec2);
 	__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1)); // [ C D | A B ]
 	__m128 sums = _mm_add_ps(v, shuf);       // sums = [ D+C C+D | B+A A+B ]
 	shuf        = _mm_movehl_ps(shuf, sums); //  [   C   D | D+C C+D ]  // let the

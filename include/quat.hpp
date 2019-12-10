@@ -172,7 +172,7 @@ inline quat::type quat::mul(pref q1, pref q2) {
 	Q2Z     = _mm_shuffle_ps(Q2Z, Q2Z, _MM_SHUFFLE(2, 2, 2, 2));
 	// Retire q1 and perform q1*Q2W
 	vResult        = _mm_mul_ps(vResult, q1);
-	Quad Q1Shuffle = q1;
+	type Q1Shuffle = q1;
 	// Shuffle the copies of q1
 	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(0, 1, 2, 3));
 	// mul by Q1WZYX

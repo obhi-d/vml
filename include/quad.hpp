@@ -308,7 +308,7 @@ inline quad::type quad::set_w(quad::pref q, scalar_type val) {
 	// Replace the x component
 	res = _mm_move_ss(res, v);
 	// Swap y and x again
-	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 2, 0, 1));
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(0, 2, 1, 3));
 #endif
 #else
 	return {q[0], q[1], q[2], val};
@@ -543,8 +543,8 @@ inline quad::type quad::recip_sqrt(quad::pref qpf) {
 #else
 	const __m128 approx = _mm_rsqrt_ps(qpf);
 	const __m128 muls   = _mm_mul_ps(_mm_mul_ps(qpf, approx), approx);
-	return _mm_mul_ps(_mm_mul_ps({0.5f, 0.5f, 0.5f, 0.5f}, approx),
-	                  _mm_sub_ps({3.f, 3.f, 3.f, 3.f}, muls));
+	return _mm_mul_ps(_mm_mul_ps(_mm_set_ps1(0.5f), approx),
+	                  _mm_sub_ps(_mm_set_ps1(3.0f), muls));
 #endif
 #else
 	return quad::set(vml::recip_sqrt(qpf[0]), vml::recip_sqrt(qpf[1]),
