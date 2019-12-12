@@ -1,9 +1,7 @@
 #pragma once
 
 #include "vml_commons.hpp"
-#if VML_USE_SSE_LEVEL >= 2
 #define USE_SSE2
-#endif
 #include "sse_mathfun.h"
 
 namespace vml {
