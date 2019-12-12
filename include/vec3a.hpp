@@ -26,7 +26,6 @@ struct vec3a : public quad {
 
 inline vec3a::type vec3a::from_vec4(vec4_t p) {
 #if VML_USE_SSE_AVX
-
 	return _mm_and_ps(p, VML_CLEAR_W_VEC);
 #else
 	return quad::set_w(p, 0);
@@ -42,7 +41,6 @@ inline vec3a::type vml::vec3a::normalize(pref vec) {
 	return _mm_div_ps(vec, q);
 #elif VML_USE_SSE_LEVEL >= 3
 	type q = _mm_mul_ps(vec, vec);
-	q      = _mm_and_ps(q, VML_CLEAR_W_VEC);
 	q      = _mm_hadd_ps(q, q); // latency 7
 	q      = _mm_hadd_ps(q, q); // latency 7
 	                            // get the

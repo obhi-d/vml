@@ -55,7 +55,7 @@ inline void transform::set_translation(transform_t& _, vec3a_t const& v) {
 #if VML_USE_SSE_AVX
 	_.translation_and_scale =
 	    _mm_or_ps(_mm_and_ps(_.translation_and_scale, VML_CLEAR_XYZ_VEC),
-	              _mm_and_ps(v, VML_CLEAR_W_VEC));
+	              v);
 #else
 	_.translation_and_scale = {v[0], v[1], v[2], _.translation_and_scale[3]};
 #endif
