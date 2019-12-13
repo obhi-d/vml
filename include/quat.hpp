@@ -17,19 +17,29 @@ struct quat : public quad {
 	using quad::normalize;
 
 	static inline type identity();
+	static inline type conjugate(pref);
 	static inline type from_axis_angle(vec3_t const& v, scalar_type ang);
 	static inline type from_axis_angle(axis_angle_t const& v);
 	static inline type from_mat4(mat4_t const& m);
 	static inline type from_mat3(mat3_t const& m);
 	static inline type mul(pref q1, pref q2);
 	static inline vec3a_t transform(pref q1, vec3a_t const& q2);
-	static inline vec3a_t transform_bounds(pref q1, vec3a_t const& extends);
+	static inline vec3a_t transform_bounds_extends(pref q1, vec3a_t const& extends);
 	static inline type slerp(pref q1, pref q2, scalar_type t);
 	static inline type lerp(pref q1, pref q2, scalar_type t);
 	static inline type inverse(pref q);
 };
 
 inline quat::type quat::identity() { return set(0.0f, 0.0f, 0.0f, 1.0f); }
+inline quat::type quat::conjugate(quat::pref q) {
+#if VML_USE_SSE_AVX
+	const __m128i k_sign =
+	    _mm_set_epi32(0x00000000, 0x80000000, 0x80000000, 0x80000000);
+	return _mm_xor_ps(q, vml_cast_i_to_v(k_sign));
+#else
+	return quad::set(-(q[0]), -(q[1]), -(q[2]), (q[3]));
+#endif
+}
 inline quat::type quat::from_axis_angle(vec3_t const& axis, scalar_type ang) {
 #ifndef NDEBUG
 	float len = vec3::length(axis);
@@ -206,16 +216,41 @@ inline quat::type quat::mul(pref q1, pref q2) {
 #endif
 }
 inline vec3a_t quat::transform(pref q, vec3a_t const& v) {
+// quad_t u = vec3a::from_vec4(q);
+#ifdef VML_QUAT_MUL_BY_CONJUGATE
+	quad_t qb        = conjugate(q);
+	const quad_t two = set(2.0f);
+	return vec3a::from_vec4(add(add(mul(splat_x(mul_x(two, vdot(q, v))), q),
+	               mul(splat_w(mul(q, two)), vec3a::cross(q, v))),
+	           mul(splat_x(vdot(qb, qb)), q)));
+#else
 	vec3a_t uv  = vec3a::cross(q, v);
 	vec3a_t uuv = vec3a::cross(q, uv);
-	return vec3a::add(vec3a::add(v, quad::mul(uv, 2 * quad::w(q))),
+	return vec3a::add(vec3a::add(v, quad::mul(uv, splat_w(mul(set(2.0f), q)))),
 	                  vec3a::add(uuv, uuv));
+#endif
 }
-inline vec3a_t quat::transform_bounds(pref q, vec3a_t const& v) {
+inline vec3a_t quat::transform_bounds_extends(pref q, vec3a_t const& v) {
+#ifdef VML_QUAT_MUL_BY_CONJUGATE
+	quad_t qb        = conjugate(q);
+	const quad_t two = set(2.0f);
+	return vec3a::from_vec4(quad::add(
+	    quad::add(
+	        quad::abs(
+	            quad::mul(quad::splat_x(quad::mul_x(two, quad::vdot(q, v))), q)),
+	              quad::abs(quad::mul(quad::splat_w(quad::mul(q, two)),
+	                                  vec3a::cross(q, v)))
+			),
+	    quad::abs(quad::mul(quad::splat_x(quad::vdot(qb, qb)), q))
+		)
+	);
+#else
 	vec3a_t uv  = vec3a::cross(q, v);
 	vec3a_t uuv = vec3a::cross(q, uv);
-	return vec3a::add(vec3a::add(v, vec3a::abs(quad::mul(uv, 2 * quad::w(q)))),
-	                  vec3a::abs(vec3a::add(uuv, uuv)));
+	return vec3a::add(
+	    vec3a::add(quad::abs(v), quad::abs(quad::mul(uv, splat_w(mul(set(2.0f), q))))),
+	                  quad::abs(vec3a::add(uuv, uuv)));
+#endif
 }
 inline quat::type quat::slerp(pref from, pref to, scalar_type t) {
 	float cosom, abs_cosom, sinom, omega, scale0, scale1;

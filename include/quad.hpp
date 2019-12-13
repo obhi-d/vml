@@ -28,6 +28,7 @@ struct quad {
 	                       scalar_type w);
 	static inline type set(scalar_type const* v);
 	static inline type set_unaligned(scalar_type const* v);
+	static inline type set_x(scalar_type x);
 	static inline type set_x(pref v, scalar_type x);
 	static inline type set_y(pref v, scalar_type y);
 	static inline type set_z(pref v, scalar_type z);
@@ -237,6 +238,14 @@ inline quad::scalar_type quad::w(quad::pref q) {
 	return _mm_cvtss_f32(temp);
 #else
 	return q[3];
+#endif
+}
+
+inline quad::type quad::set_x(scalar_type val) {
+#if VML_USE_SSE_AVX
+	return _mm_set_ss(val);
+#else
+	return {val, 0, 0, 0};
 #endif
 }
 

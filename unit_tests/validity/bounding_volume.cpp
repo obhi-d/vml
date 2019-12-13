@@ -128,7 +128,6 @@ TEST_CASE("Validate bounding_volume::set", "[bounding_volume::set]") {
     REQUIRE(vml::vec3a::z(vml::bounding_volume::half_extends(bounds1)) == Approx(61.0f));
 }
 
-
 TEST_CASE("Validate bounding_volume::update(matrix)", "[bounding_volume::update(matrix)]") {
     vml::bounding_volume_t bounds1 = {
         vml::sphere::set(5.0f, 2.2f, 5.0f, 3.4641f),

@@ -146,7 +146,7 @@ inline void bounding_volume::update(bounding_volume_t& _, float scale,
 	        sphere::radius(_.spherical_vol)),
 	    scale);
 	_.half_extends =
-	    quat::transform_bounds(rot, vec3a::mul(_.orig_half_extends, scale));
+	    quat::transform_bounds_extends(rot, vec3a::mul(_.orig_half_extends, scale));
 }
 
 inline void bounding_volume::update(bounding_volume_t& _,
