@@ -503,11 +503,9 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
 	q1 = _mm_mul_ps(rot, q0);
 
 	v0 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 0, 0, 1));
-	v0 = _mm_and_ps(v0, fff0);
 	v1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 1, 2, 2));
-	v1 = _mm_and_ps(v1, fff0);
 	r0 = _mm_sub_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), v0);
-	r0 = _mm_sub_ps(r0, v1);
+	r0 = _mm_and_ps(_mm_sub_ps(r0, v1), fff0);
 
 	v0 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 1, 0, 0));
 	v1 = _mm_shuffle_ps(q0, q0, _MM_SHUFFLE(3, 2, 1, 2));

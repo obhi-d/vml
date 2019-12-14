@@ -24,7 +24,8 @@ struct quat : public quad {
 	static inline type from_mat3(mat3_t const& m);
 	static inline type mul(pref q1, pref q2);
 	static inline vec3a_t transform(pref q1, vec3a_t const& q2);
-	static inline vec3a_t transform_bounds_extends(pref q1, vec3a_t const& extends);
+	static inline vec3a_t transform_bounds_extends(pref q1,
+	                                               vec3a_t const& extends);
 	static inline type slerp(pref q1, pref q2, scalar_type t);
 	static inline type lerp(pref q1, pref q2, scalar_type t);
 	static inline type inverse(pref q);
@@ -117,7 +118,8 @@ inline quat::type quat::from_mat3(mat3_t const& m) {
 inline quat::type quat::mul(pref q1, pref q2) {
 #if VML_USE_SSE_AVX
 #if VML_USE_SSE_LEVEL >= 3
-#define _mm_pshufd(r, i) vml_cast_i_to_v(_mm_shuffle_epi32(vml_cast_v_to_i(r), i))
+#define _mm_pshufd(r, i)                                                       \
+	vml_cast_i_to_v(_mm_shuffle_epi32(vml_cast_v_to_i(r), i))
 	// @link
 	// http://momchil-velikov.blogspot.com/2013/10/fast-sse-quternion-multiplication.html
 	// Copy to SSE registers and use as few as possible for x86
@@ -220,36 +222,82 @@ inline vec3a_t quat::transform(pref q, vec3a_t const& v) {
 #ifdef VML_QUAT_MUL_BY_CONJUGATE
 	quad_t qb        = conjugate(q);
 	const quad_t two = set(2.0f);
-	return vec3a::from_vec4(add(add(mul(splat_x(mul_x(two, vdot(q, v))), q),
-	               mul(splat_w(mul(q, two)), vec3a::cross(q, v))),
-	           mul(splat_x(vdot(qb, qb)), q)));
-#else
-	vec3a_t uv  = vec3a::cross(q, v);
-	vec3a_t uuv = vec3a::cross(q, uv);
-	return vec3a::add(vec3a::add(v, quad::mul(uv, splat_w(mul(set(2.0f), q)))),
-	                  vec3a::add(uuv, uuv));
-#endif
-}
-inline vec3a_t quat::transform_bounds_extends(pref q, vec3a_t const& v) {
-#ifdef VML_QUAT_MUL_BY_CONJUGATE
-	quad_t qb        = conjugate(q);
-	const quad_t two = set(2.0f);
 	return vec3a::from_vec4(quad::add(
 	    quad::add(
-	        quad::abs(
-	            quad::mul(quad::splat_x(quad::mul_x(two, quad::vdot(q, v))), q)),
-	              quad::abs(quad::mul(quad::splat_w(quad::mul(q, two)),
-	                                  vec3a::cross(q, v)))
-			),
-	    quad::abs(quad::mul(quad::splat_x(quad::vdot(qb, qb)), q))
-		)
-	);
+	        quad::mul(splat_x(quad::mul_x(two, quad::vdot(q, v))), q),
+	        quad::mul(quad::splat_w(quad::mul(q, two)), vec3a::cross(q, v))),
+	    quad::mul(quad::splat_x(quad::vdot(qb, qb)), q)));
 #else
 	vec3a_t uv  = vec3a::cross(q, v);
 	vec3a_t uuv = vec3a::cross(q, uv);
 	return vec3a::add(
-	    vec3a::add(quad::abs(v), quad::abs(quad::mul(uv, splat_w(mul(set(2.0f), q))))),
-	                  quad::abs(vec3a::add(uuv, uuv)));
+	    vec3a::add(v,
+	               quad::mul(uv, quad::splat_w(quad::mul(quad::set(2.0f), q)))),
+	    vec3a::add(uuv, uuv));
+#endif
+}
+inline vec3a_t quat::transform_bounds_extends(pref rot, vec3a_t const& v) {
+#if VML_USE_SSE_AVX
+
+	quad_t r0, r1, r2;
+	quad_t q0, q1;
+	quad_t v0, v1, v2;
+
+	q0 = _mm_add_ps(rot, rot);
+	q1 = _mm_mul_ps(rot, q0);
+
+	v0 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 0, 0, 1));
+	v1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 1, 2, 2));
+	r0 = _mm_sub_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), v0);
+
+	v0 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 1, 0, 0));
+	v1 = _mm_shuffle_ps(q0, q0, _MM_SHUFFLE(3, 2, 1, 2));
+	v0 = _mm_mul_ps(v0, v1);
+
+	v1 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 3, 3, 3));
+	v2 = _mm_shuffle_ps(q0, q0, _MM_SHUFFLE(3, 0, 2, 1));
+	v1 = _mm_mul_ps(v1, v2);
+
+	r1 = _mm_add_ps(v0, v1);
+	r2 = _mm_sub_ps(v0, v1);
+
+	v0 = _mm_shuffle_ps(r1, r2, _MM_SHUFFLE(1, 0, 2, 1));
+	v0 = _mm_shuffle_ps(v0, v0, _MM_SHUFFLE(1, 3, 2, 0));
+	v1 = _mm_shuffle_ps(r1, r2, _MM_SHUFFLE(2, 2, 0, 0));
+	v1 = _mm_shuffle_ps(v1, v1, _MM_SHUFFLE(2, 0, 2, 0));
+
+	q1 = _mm_shuffle_ps(r0, v0, _MM_SHUFFLE(1, 0, 3, 0));
+	q1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 3, 2, 0));
+
+	__m128 t0 = quad::abs(_mm_mul_ps(quad::splat_x(v), q1));
+	q1        = _mm_shuffle_ps(r0, v0, _MM_SHUFFLE(3, 2, 3, 1));
+	q1        = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 3, 0, 2));
+	__m128 t1 = quad::abs(_mm_mul_ps(quad::splat_y(v), q1));
+	q1        = _mm_shuffle_ps(v1, r0, _MM_SHUFFLE(3, 2, 1, 0));
+	__m128 t2 = quad::abs(_mm_mul_ps(quad::splat_y(v), q1));
+	return vec3a::from_vec4(quad::add(t0, quad::add(t1, t2)));
+#else
+	float xx = rot[0] * rot[0];
+	float yy = rot[1] * rot[1];
+	float zz = rot[2] * rot[2];
+	float xy = rot[0] * rot[1];
+	float xz = rot[0] * rot[2];
+	float yz = rot[1] * rot[2];
+	float wx = rot[3] * rot[0];
+	float wy = rot[3] * rot[1];
+	float wz = rot[3] * rot[2];
+
+	quad_t t0 = quad::abs(quad_t{v[0] * (1 - 2 * (yy + zz)),
+	                             v[0] * (2 * (xy + wz)), v[0] * (2 * (xz - wy))});
+
+	quad_t t1 =
+	    quad::abs(quad_t{v[1] * (2 * (xy - wz)), v[1] * (1 - 2 * (xx + zz)),
+	                     v[1] * (2 * (yz + wx))});
+
+	quad_t t2 = quad::abs(quad_t{v[2] * (2 * (xz + wy)), v[2] * (2 * (yz - wx)),
+	                             v[2] * (1 - 2 * (xx + yy))});
+
+	return vec3a::from_vec4(quad::add(t0, quad::add(t1, t2)));
 #endif
 }
 inline quat::type quat::slerp(pref from, pref to, scalar_type t) {
