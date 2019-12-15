@@ -56,7 +56,10 @@ struct frustum_t {
 				pplanes[i] = i_planes[i];
 		}
 	}
-	~frustum_t();
+	~frustum_t() {
+		if (plane_count > k_fixed_plane_count && pplanes)
+			vml::deallocate(pplanes, sizeof(vml::plane_t) * plane_count);
+	}
 
 	inline frustum_t& operator=(frustum_t const& i_other) {
 		if (plane_count > k_fixed_plane_count && pplanes)
@@ -126,6 +129,7 @@ struct frustum_t {
 		// Bottom clipping planeT
 		planes[k_bottom] = plane::normalize(
 		    vec4::negate(vec4::add(mat4::row(combo, 1), mat4::row(combo, 3))));
+		plane_count = 6;
 	}
 
 	plane_t const* get_all() const {
@@ -144,14 +148,26 @@ struct frustum_t {
 };
 
 struct frustum {
+	using coherency = frustum_t::coherency;
+	using plane_type = frustum_t::plane_type;
+
 	static inline void set(frustum_t& _, mat4::pref m) {
 		_.build(m);
+	}
+	//! From a combined view projection matrix
+	static inline frustum_t from_mat4_transpose(mat4::pref m) {
+		frustum_t _;
+		_.build(m);
+		return _;
 	}
 	static inline std::pair<plane_t const*, std::uint32_t> get_planes(frustum_t const& _) {
 		return std::make_pair(_.get_all(), _.count());
 	}
 	static inline std::pair<plane_t*, std::uint32_t> get_planes(frustum_t& _) {
 		return std::make_pair(_.get_all(), _.count());
+	}
+	static inline plane_t get_plane(frustum_t& _, frustum::plane_type type) {
+		return _[type];
 	}
 	static inline void set_plane(frustum_t& _,std::uint32_t i, plane_t const& p) {
 		_.modify(i, p);

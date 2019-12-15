@@ -33,10 +33,26 @@ struct quad {
 	static inline type set_y(pref v, scalar_type y);
 	static inline type set_z(pref v, scalar_type z);
 	static inline type set_w(pref v, scalar_type w);
+	//! Set the 0th element of v from 0th element of q
+	static inline type set_x(pref v, pref q);
+	//! Set the 1st element of v from 0th element of q
+	static inline type set_y(pref v, pref q);
+	//! Set the 2nd element of v from 0th element of q
+	static inline type set_z(pref v, pref q);
+	//! Set the 3rd element of v from 0th element of q
+	static inline type set_w(pref v, pref q);
+	//! Return the 0th element of v
 	static inline scalar_type x(pref v);
+	//! Return the 1st element of v
 	static inline scalar_type y(pref v);
+	//! Return the 2nd element of v
 	static inline scalar_type z(pref v);
+	//! Return the 3rd element of v
 	static inline scalar_type w(pref v);
+	//! Return min of all elements
+	static inline type min(pref a, pref b);
+	//! Return max of all elements
+	static inline type max(pref a, pref b);
 	static inline type zero();
 	static inline type splat_x(pref v);
 	static inline type splat_y(pref v);
@@ -54,9 +70,17 @@ struct quad {
 	static inline type add_x(pref a, pref b);
 	//! Sub only the [0]th index
 	static inline type sub_x(pref a, pref b);
-	//! mul only the [0]th index
+	//! Multiply only the [0]th index
 	static inline type mul_x(pref a, pref b);
+	//! Sqrt  only the [0]th index
+	static inline type sqrt_x(pref a);
+	//! Reciprocal sqrt  only the [0]th index
+	static inline type recip_sqrt_x(pref a);
+	//! Half of 0th element
+	static inline type half_x(pref a);
+	//! Multiply the scalar to all elements of a
 	static inline type mul(pref a, scalar_type b);
+	//! Multiply the scalar to all elements of a
 	static inline type mul(scalar_type b, pref a);
 	static inline type half(pref a);
 	static inline type div(pref a, pref b);
@@ -241,6 +265,28 @@ inline quad::scalar_type quad::w(quad::pref q) {
 #endif
 }
 
+inline quad::type quad::min(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_min_ps(a, b);
+#else
+	type r;
+	for (std::uint32_t i = 0; i < element_count; ++i)
+		r[i] = std::min(a[i], b[i]);
+	return r;
+#endif
+}
+
+inline quad::type quad::max(quad::pref a, quad::pref b) {
+#if VML_USE_SSE_AVX
+	return _mm_max_ps(a, b);
+#else
+	type r;
+	for (std::uint32_t i = 0; i < element_count; ++i)
+		r[i] = std::max(a[i], b[i]);
+	return r;
+#endif
+}
+
 inline quad::type quad::set_x(scalar_type val) {
 #if VML_USE_SSE_AVX
 	return _mm_set_ss(val);
@@ -321,6 +367,58 @@ inline quad::type quad::set_w(quad::pref q, scalar_type val) {
 #endif
 #else
 	return {q[0], q[1], q[2], val};
+#endif
+}
+
+inline quad::type quad::set_x(quad::pref q, quad::pref v) {
+#if VML_USE_SSE_AVX
+	return _mm_move_ss(q, v);
+#else
+	return {v[0], q[1], q[2], q[3]};
+#endif
+}
+
+inline quad::type quad::set_y(quad::pref q, quad::pref v) {
+#if VML_USE_SSE_AVX
+	type res = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 2, 0, 1));
+	// Replace the x component
+	res = _mm_move_ss(res, v);
+	// Swap y and x again
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 2, 0, 1));
+#else
+	return {q[0], v[0], q[2], q[3]};
+#endif
+}
+
+inline quad::type quad::set_z(quad::pref q, quad::pref v) {
+#if VML_USE_SSE_AVX
+	type res = _mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 0, 1, 2));
+	// Replace the x component
+	res = _mm_move_ss(res, v);
+	// Swap y and x again
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 0, 1, 2));
+#else
+	return {q[0], q[1], v[0], q[3]};
+#endif
+}
+
+inline quad::type quad::set_w(quad::pref q, quad::pref v) {
+#if VML_USE_SSE_AVX
+	type res = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 2, 1, 3));
+	// Replace the x component
+	res = _mm_move_ss(res, v);
+	// Swap y and x again
+	return _mm_shuffle_ps(res, res, _MM_SHUFFLE(0, 2, 1, 3));
+#else
+	return {q[0], q[1], q[2], v[0]};
+#endif
+}
+
+inline quad::type quad::half_x(quad::pref q) {
+#if VML_USE_SSE_AVX
+	return _mm_mul_ss(_mm_set_ss(0.5f), q);
+#else
+	return {q[0] * 0.5f, 0.0f, 0.0f, 0.0f};
 #endif
 }
 
@@ -468,6 +566,23 @@ inline quad::type quad::mul_x(quad::pref a, quad::pref b) {
 	return quad::set(a[0] * b[0], 0, 0, 0);
 #endif
 }
+
+inline quad::type quad::sqrt_x(quad::pref a) {
+#if VML_USE_SSE_AVX
+	return _mm_sqrt_ss(a);
+#else
+	return quad::set(vml::sqrt(a[0]), 0, 0, 0);
+#endif
+}
+
+inline quad::type quad::recip_sqrt_x(quad::pref a) {
+#if VML_USE_SSE_AVX
+	return _mm_rsqrt_ss(a);
+#else
+	return quad::set(vml::recip_sqrt(a[0]), 0, 0, 0);
+#endif
+}
+
 inline quad::type quad::div(quad::pref a, quad::pref b) {
 #if VML_USE_SSE_AVX
 	return _mm_div_ps(a, b);
@@ -582,7 +697,7 @@ inline quad::type quad::select(quad::pref v1, quad::pref v2,
 inline quad::type quad::vdot(quad::pref vec1, quad::pref vec2) {
 #if VML_USE_SSE_AVX
 #if VML_USE_SSE_LEVEL >= 4
-	return _mm_dp_ps(vec1, vec2, 0x7F);
+	return _mm_dp_ps(vec1, vec2, 0xFF);
 #elif VML_USE_SSE_LEVEL >= 3
 	__m128 v = _mm_mul_ps(vec1, vec2);
 	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0

@@ -40,14 +40,14 @@ inline vec3a::type vml::vec3a::normalize(pref vec) {
 	q = _mm_sqrt_ps(q);
 	return _mm_div_ps(vec, q);
 #elif VML_USE_SSE_LEVEL >= 3
-	type q = _mm_mul_ps(vec, vec);
-	q      = _mm_hadd_ps(q, q); // latency 7
-	q      = _mm_hadd_ps(q, q); // latency 7
-	                            // get the
-	                            // reciprocal
-	q = _mm_sqrt_ss(q);
-	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
-	return _mm_div_ps(vec, q);
+	__m128 v = _mm_mul_ps(vec, vec);
+	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
+	__m128 sums = _mm_add_ps(v, shuf);
+	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
+	sums        = _mm_add_ss(sums, shuf);
+	sums 		= _mm_sqrt_ss(sums);
+	sums 		= _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
+	return _mm_div_ps(vec, sums);
 #else
 	// Perform the dot product
 	type q = _mm_mul_ps(vec, vec);

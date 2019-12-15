@@ -238,6 +238,8 @@ inline vec3a_t quat::transform(pref q, vec3a_t const& v) {
 }
 inline vec3a_t quat::transform_bounds_extends(pref rot, vec3a_t const& v) {
 #if VML_USE_SSE_AVX
+	const __m128 fff0 =
+	    vml_cast_i_to_v(_mm_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF));
 
 	quad_t r0, r1, r2;
 	quad_t q0, q1;
@@ -249,6 +251,7 @@ inline vec3a_t quat::transform_bounds_extends(pref rot, vec3a_t const& v) {
 	v0 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 0, 0, 1));
 	v1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 1, 2, 2));
 	r0 = _mm_sub_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), v0);
+	r0 = _mm_sub_ps(r0, v1);
 
 	v0 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 1, 0, 0));
 	v1 = _mm_shuffle_ps(q0, q0, _MM_SHUFFLE(3, 2, 1, 2));
@@ -274,7 +277,7 @@ inline vec3a_t quat::transform_bounds_extends(pref rot, vec3a_t const& v) {
 	q1        = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 3, 0, 2));
 	__m128 t1 = quad::abs(_mm_mul_ps(quad::splat_y(v), q1));
 	q1        = _mm_shuffle_ps(v1, r0, _MM_SHUFFLE(3, 2, 1, 0));
-	__m128 t2 = quad::abs(_mm_mul_ps(quad::splat_y(v), q1));
+	__m128 t2 = quad::abs(_mm_mul_ps(quad::splat_z(v), q1));
 	return vec3a::from_vec4(quad::add(t0, quad::add(t1, t2)));
 #else
 	float xx = rot[0] * rot[0];

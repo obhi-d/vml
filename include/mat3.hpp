@@ -29,6 +29,7 @@ struct mat3 : public mat_base<detail::mat3_traits> {
 	static inline type transpose(pref m);
 	// @brief Create a rotation matrix from quaternion
 	static inline type from_quat(quat::pref rot);
+	static inline type from_rotation(quat::pref rot);
 
 };
 
@@ -61,6 +62,10 @@ inline mat3::type mat3::from_quat(quat::pref rot) {
 	type ret;
 	set_rotation(ret, rot);
 	return ret;
+}
+
+inline mat3::type mat3::from_rotation(quat::pref rot) {
+	return from_quat(rot);
 }
 
 } // namespace vml

@@ -54,6 +54,8 @@ template <typename concrete> struct vec_base : public concrete {
 	static inline type div(pref a, pref b);
 	static inline type madd(pref v, pref m, pref a);
 	static inline scalar_type hadd(pref q1);
+	static inline type min(pref q1, pref q2);
+	static inline type max(pref q1, pref q2);
 	static inline bool greater_all(pref q1, pref q2);
 	static inline bool greater_any(pref q1, pref q2);
 	static inline bool lesser_all(pref q1, pref q2);
@@ -401,6 +403,20 @@ inline typename vec_base<concrete>::scalar_type vec_base<concrete>::hadd(
 			ret[i] += q[i];
 		return ret;
 	}
+}
+template <typename concrete>
+inline typename vec_base<concrete>::type vec_base<concrete>::min(pref q1, pref q2) {
+	typename vec_base<concrete>::type r;
+	for (std::uint32_t i = 0; i < element_count; ++i)
+		r[i] = std::min(q1[i], q2[i]);
+	return r;
+}
+template <typename concrete>
+inline typename vec_base<concrete>::type vec_base<concrete>::max(pref q1, pref q2) {
+	typename vec_base<concrete>::type r;
+	for (std::uint32_t i = 0; i < element_count; ++i)
+		r[i] = std::max(q1[i], q2[i]);
+	return r;
 }
 template <typename concrete>
 inline bool vec_base<concrete>::greater_all(pref q1, pref q2) {

@@ -5,7 +5,7 @@
 
 namespace vml {
 namespace detail {} // namespace detail
-struct eular_angles : public vec3 {
+struct euler_angles : public vec3 {
 	using vec3::cref;
 	using vec3::pref;
 	using vec3::ref;
@@ -13,13 +13,14 @@ struct eular_angles : public vec3 {
 	using vec3::scalar_type;
 	using vec3::type;
 
+	//! Ensure angles are in canonical state
 	static inline type canonize(pref m);
-	static inline type set_rotation(quat_t const& m);
-	static inline type from_inv_quat(quat_t const& m);
+	static inline type from_quat(quat_t const& m);
+	static inline type from_quat_conjugate(quat_t const& m);
 	static inline type from_mat4(mat4_t const& m);
 	static inline type from_mat3(mat3_t const& m);
 };
-inline eular_angles::type eular_angles::canonize(
+inline euler_angles::type euler_angles::canonize(
     pref m) { // First, wrap r[0] in range -pi ... pi
 	type r;
 	r[0] = wrap_pi(m[0]);
@@ -52,7 +53,7 @@ inline eular_angles::type eular_angles::canonize(
 	return r;
 }
 
-inline eular_angles::type eular_angles::set_rotation(quat_t const& src) {
+inline euler_angles::type euler_angles::from_quat(quat_t const& src) {
 	type r;
 	float src_x = quad::x(src);
 	float src_y = quad::y(src);
@@ -81,7 +82,7 @@ inline eular_angles::type eular_angles::set_rotation(quat_t const& src) {
 	return r;
 }
 
-inline eular_angles::type eular_angles::from_inv_quat(quat_t const& src) {
+inline euler_angles::type euler_angles::from_quat_conjugate(quat_t const& src) {
 	type r;
 	float src_x = quat::x(src);
 	float src_y = quat::y(src);
@@ -110,11 +111,11 @@ inline eular_angles::type eular_angles::from_inv_quat(quat_t const& src) {
 	return r;
 }
 
-inline eular_angles::type eular_angles::from_mat4(mat4_t const& m) {
+inline euler_angles::type euler_angles::from_mat4(mat4_t const& m) {
 	return from_mat3(*reinterpret_cast<const mat3_t*>(&m));
 }
 
-inline eular_angles::type eular_angles::from_mat3(mat3_t const& src) {
+inline euler_angles::type euler_angles::from_mat3(mat3_t const& src) {
 	type r;
 	// Extract sin(r[0]) from e[3][2].
 	float sp = -src.e[2][1];

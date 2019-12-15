@@ -2,7 +2,7 @@
 #include "aabb.hpp"
 #include "axis_angle.hpp"
 #include "bounding_volume.hpp"
-#include "eular_angles.hpp"
+#include "euler_angles.hpp"
 #include "frustum.hpp"
 #include "intersect.hpp"
 #include "irect.hpp"

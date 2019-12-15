@@ -33,7 +33,7 @@
 
 #define VML_CLEAR_W_VEC                                                        \
 	vml_cast_i_to_v(_mm_set_epi32(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF))
-#define VML_XYZ0_W1_VEC vml_cast_i_to_v(_mm_set_epi32(1, 0, 0, 0))
+#define VML_XYZ0_W1_VEC _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f)
 #define VML_CLEAR_XYZ_VEC vml_cast_i_to_v(_mm_set_epi32(0xFFFFFFFF, 0, 0, 0))
 
 #endif

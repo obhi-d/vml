@@ -17,7 +17,7 @@ template <typename scalar_t> using quat_t         = quad_t<scalar_t>;
 template <typename scalar_t> using sphere_t       = quad_t<scalar_t>;
 template <typename scalar_t> using axis_angle_t   = quad_t<scalar_t>;
 template <typename scalar_t> using polar_coord_t  = vec2_t<scalar_t>;
-template <typename scalar_t> using eular_angles_t = vec3_t<scalar_t>;
+template <typename scalar_t> using euler_angles_t = vec3_t<scalar_t>;
 template <typename scalar_t> using rect_t = std::array<vec2_t<scalar_t>, 2>;
 template <typename scalar_t> using aabb_t = std::array<vec3a_t<scalar_t>, 2>;
 

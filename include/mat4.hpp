@@ -1,15 +1,15 @@
 #pragma once
-#include "mat_base.hpp"
 #include "aabb.hpp"
+#include "mat_base.hpp"
 namespace vml {
 namespace detail {
 struct mat4_traits {
-	using type     = types::mat4_t<float>;
-	using ref      = type&;
-	using pref     = type const&;
-	using cref     = type const&;
-	using row_type = types::vec4_t<float>;
-	using row_tag  = vec4;
+	using type        = types::mat4_t<float>;
+	using ref         = type&;
+	using pref        = type const&;
+	using cref        = type const&;
+	using row_type    = types::vec4_t<float>;
+	using row_tag     = vec4;
 	using scalar_type = float;
 
 	enum { element_count = 16 };
@@ -32,13 +32,17 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	//! @brief Full matrix multiplication
 	static inline type mul(pref m1, pref m2);
 	//! @brief transform vertices assuming orthogonal matrix
-	static inline void transform_assume_ortho(
-	    pref m, const vec3::type* i_stream, std::uint32_t i_stride,
-	    std::uint32_t count, vec4_t* o_stream, std::uint32_t i_output_stride);
+	static inline void transform_assume_ortho(pref m, const vec3::type* i_stream,
+	                                          std::uint32_t i_stride,
+	                                          std::uint32_t count,
+	                                          vec4_t* o_stream,
+	                                          std::uint32_t i_output_stride);
 	//! @brief transform vertices assuming orthogonal matrix
-	static inline void transform_assume_ortho(
-	    pref m, const vec3::type* i_stream, std::uint32_t i_stride,
-	    std::uint32_t count, vec3::type* o_stream, std::uint32_t i_output_stride);
+	static inline void transform_assume_ortho(pref m, const vec3::type* i_stream,
+	                                          std::uint32_t i_stride,
+	                                          std::uint32_t count,
+	                                          vec3::type* o_stream,
+	                                          std::uint32_t i_output_stride);
 	//! @brief transform vertices in place, assuming orthogonal matrix
 	static inline void transform_assume_ortho(pref m, vec3::type* io_stream,
 	                                          std::uint32_t i_stride,
@@ -70,21 +74,26 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	static inline type from_world_to_view(pref m);
 	//! @brief mat4::type Creates a camera look at matrix
 	static inline type from_look_at(vec3a::pref eye, vec3a::pref look_at,
-	                              vec3a::pref up);
+	                                vec3a::pref up);
 	//! @brief Orthogonal Projection matrix
-	static inline type from_orthographic_projection(scalar_type width, scalar_type height,
-	                                       scalar_type nearPlane,
-	                                       scalar_type farPlane);
+	static inline type from_orthographic_projection(
+	    scalar_type min_x, scalar_type max_x, scalar_type min_y,
+	    scalar_type max_y, scalar_type near_plane, scalar_type far_plane);
+	//! @brief Orthogonal Projection matrix
+	static inline type from_orthographic_projection(scalar_type width,
+	                                                scalar_type height,
+	                                                scalar_type near_plane,
+	                                                scalar_type far_plane);
 	//! @brief Perspective Projection matrix
-	static inline type from_perspective_projection(scalar_type fieldOfView,
-	                                             scalar_type aspectRatio,
-	                                             scalar_type nearPlane,
-	                                             scalar_type farPlane);
+	static inline type from_perspective_projection(scalar_type field_of_view,
+	                                               scalar_type aspect_ratio,
+	                                               scalar_type near_plane,
+	                                               scalar_type far_plane);
 
 	static inline type mul(pref m, scalar_type amount);
 	static inline type mul(scalar_type amount, pref m);
 	static inline vec4_t mul(vec4::pref v, mat4::pref m);
-	
+
 	static inline type transpose(pref m);
 	static inline void transpose_in_place(ref m);
 	static inline type inverse(pref m);
@@ -92,9 +101,11 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	static inline type inverse_assume_ortho(pref m);
 };
 
- inline float mat4::max_scale(mat4_t const& m) {
-	 return vml::sqrt(std::max(std::max(quad::sqlength(m.r[0]), quad::sqlength(m.r[1])), quad::sqlength(m.r[2])));
- }
+inline float mat4::max_scale(mat4_t const& m) {
+	return vml::sqrt(
+	    std::max(std::max(quad::sqlength(m.r[0]), quad::sqlength(m.r[1])),
+	             quad::sqlength(m.r[2])));
+}
 
 inline mat4::type mat4::mul(pref m1, pref m2) {
 #if VML_USE_SSE_AVX
@@ -178,9 +189,10 @@ inline mat4::type mat4::mul(pref m1, pref m2) {
 #endif
 }
 
-inline void mat4::transform_assume_ortho(
-    pref m, const vec3::type* inpstream, std::uint32_t inpstride, std::uint32_t count,
-    vec4_t* outstream, std::uint32_t outstride) {
+inline void mat4::transform_assume_ortho(pref m, const vec3::type* inpstream,
+                                         std::uint32_t inpstride,
+                                         std::uint32_t count, vec4_t* outstream,
+                                         std::uint32_t outstride) {
 #if VML_USE_SSE_AVX
 	assert(outstream);
 	assert(inpstream);
@@ -233,8 +245,9 @@ inline void mat4::transform_assume_ortho(
 #endif
 }
 
-inline void mat4::transform_assume_ortho(
-    pref m, vec3::type* io_stream, std::uint32_t i_stride, std::uint32_t count) {
+inline void mat4::transform_assume_ortho(pref m, vec3::type* io_stream,
+                                         std::uint32_t i_stride,
+                                         std::uint32_t count) {
 #if VML_USE_SSE_AVX
 	assert(io_stream);
 	std::uint8_t* inp_vec = (std::uint8_t*)io_stream;
@@ -278,11 +291,9 @@ inline void mat4::transform_assume_ortho(
 #endif
 }
 
-inline void mat4::transform(pref m,
-                                          const vec3::type* inpstream,
-                                          std::uint32_t inpstride, std::uint32_t count,
-                                          vec3::type* outstream,
-                                          std::uint32_t outstride) {
+inline void mat4::transform(pref m, const vec3::type* inpstream,
+                            std::uint32_t inpstride, std::uint32_t count,
+                            vec3::type* outstream, std::uint32_t outstride) {
 #if VML_USE_SSE_AVX
 	assert(outstream);
 	assert(inpstream);
@@ -340,19 +351,18 @@ inline void mat4::transform(pref m,
 #endif
 }
 
-inline vec3a::type mat4::transform_assume_ortho(
-    pref m, vec3a::pref v) {
+inline vec3a::type mat4::transform_assume_ortho(pref m, vec3a::pref v) {
 #if VML_USE_SSE_AVX
 	quad_t ret;
-	ret          = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-	ret          = _mm_mul_ps(ret, m.r[0]);
+	ret           = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+	ret           = _mm_mul_ps(ret, m.r[0]);
 	quad_t v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
 	v_temp        = _mm_mul_ps(v_temp, m.r[1]);
-	ret          = _mm_add_ps(ret, v_temp);
+	ret           = _mm_add_ps(ret, v_temp);
 	v_temp        = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp        = _mm_mul_ps(v_temp, m.r[2]);
-	ret          = _mm_add_ps(ret, v_temp);
-	ret          = _mm_add_ps(ret, m.r[3]);
+	ret           = _mm_add_ps(ret, v_temp);
+	ret           = _mm_add_ps(ret, m.r[3]);
 	return ret;
 #else
 	quad_t r, x, y, z;
@@ -368,21 +378,20 @@ inline vec3a::type mat4::transform_assume_ortho(
 #endif
 }
 
-inline vec3a::type mat4::transform(pref m,
-                                                       vec3a::pref v) {
+inline vec3a::type mat4::transform(pref m, vec3a::pref v) {
 #if VML_USE_SSE_AVX
 	quad_t ret;
-	ret          = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-	ret          = _mm_mul_ps(ret, m.r[0]);
+	ret           = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+	ret           = _mm_mul_ps(ret, m.r[0]);
 	quad_t v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
 	v_temp        = _mm_mul_ps(v_temp, m.r[1]);
-	ret          = _mm_add_ps(ret, v_temp);
+	ret           = _mm_add_ps(ret, v_temp);
 	v_temp        = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp        = _mm_mul_ps(v_temp, m.r[2]);
-	ret          = _mm_add_ps(ret, v_temp);
-	ret          = _mm_add_ps(ret, m.r[3]);
+	ret           = _mm_add_ps(ret, v_temp);
+	ret           = _mm_add_ps(ret, m.r[3]);
 	v_temp        = _mm_shuffle_ps(ret, ret, _MM_SHUFFLE(3, 3, 3, 3));
-	ret          = _mm_div_ps(ret, v_temp);
+	ret           = _mm_div_ps(ret, v_temp);
 	return ret;
 #else
 	quad_t r, x, y, z;
@@ -400,22 +409,20 @@ inline vec3a::type mat4::transform(pref m,
 #endif
 }
 
-inline vec3a::type mat4::transform_bounds_extends(
-    pref m, vec3a::pref v) {
+inline vec3a::type mat4::transform_bounds_extends(pref m, vec3a::pref v) {
 #if VML_USE_SSE_AVX
-	quad_t ret       = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-	quad_t clear_sign = vml_cast_i_to_v(
-	    _mm_set1_epi32(0x7fffffff));
-	ret              = _mm_mul_ps(ret, m.r[0]);
-	ret              = _mm_and_ps(ret, clear_sign);
+	quad_t ret        = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+	quad_t clear_sign = vml_cast_i_to_v(_mm_set1_epi32(0x7fffffff));
+	ret               = _mm_mul_ps(ret, m.r[0]);
+	ret               = _mm_and_ps(ret, clear_sign);
 	quad_t v_temp     = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
 	v_temp            = _mm_mul_ps(v_temp, m.r[1]);
 	v_temp            = _mm_and_ps(v_temp, clear_sign);
-	ret              = _mm_add_ps(ret, v_temp);
+	ret               = _mm_add_ps(ret, v_temp);
 	v_temp            = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp            = _mm_mul_ps(v_temp, m.r[2]);
 	v_temp            = _mm_and_ps(v_temp, clear_sign);
-	ret              = _mm_add_ps(ret, v_temp);
+	ret               = _mm_add_ps(ret, v_temp);
 	return ret;
 #else
 	vec3a_t ret;
@@ -429,28 +436,21 @@ inline vec3a::type mat4::transform_bounds_extends(
 #endif
 }
 
-inline aabb_t mat4::transform_aabb(
-    pref m, aabb::pref box) {
+inline aabb_t mat4::transform_aabb(pref m, aabb::pref box) {
 #if VML_USE_SSE_AVX
 	aabb_t ret;
-	quad_t max0 =
-	    _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(0, 0, 0, 0));
-	max0 = _mm_mul_ps(max0, m.r[0]);
-	quad_t min0 =
-	    _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(0, 0, 0, 0));
-	min0 = _mm_mul_ps(min0, m.r[0]);
-	quad_t max1 =
-	    _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(1, 1, 1, 1));
-	max1 = _mm_mul_ps(max1, m.r[1]);
-	quad_t min1 =
-	    _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(1, 1, 1, 1));
-	min1 = _mm_mul_ps(min1, m.r[1]);
-	quad_t max2 =
-	    _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(2, 2, 2, 2));
-	max2 = _mm_mul_ps(max2, m.r[2]);
-	quad_t min2 =
-	    _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(2, 2, 2, 2));
-	min2 = _mm_mul_ps(min2, m.r[2]);
+	quad_t max0 = _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(0, 0, 0, 0));
+	max0        = _mm_mul_ps(max0, m.r[0]);
+	quad_t min0 = _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(0, 0, 0, 0));
+	min0        = _mm_mul_ps(min0, m.r[0]);
+	quad_t max1 = _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(1, 1, 1, 1));
+	max1        = _mm_mul_ps(max1, m.r[1]);
+	quad_t min1 = _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(1, 1, 1, 1));
+	min1        = _mm_mul_ps(min1, m.r[1]);
+	quad_t max2 = _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(2, 2, 2, 2));
+	max2        = _mm_mul_ps(max2, m.r[2]);
+	quad_t min2 = _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(2, 2, 2, 2));
+	min2        = _mm_mul_ps(min2, m.r[2]);
 
 	ret[0] = _mm_add_ps(
 	    _mm_add_ps(_mm_min_ps(max0, min0),
@@ -464,23 +464,19 @@ inline aabb_t mat4::transform_aabb(
 #else
 	aabb_t ret;
 	for (int i = 0; i < 3; i++) {
-		ret[0][i] = std::min(box[0][0] * m.m[i + 0 * 4],
-		                             box[1][0] * m.m[i + 0 * 4]) +
-		                    std::min(box[0][1] * m.m[i + 1 * 4],
-		                             box[1][1] * m.m[i + 1 * 4]) +
-		                    std::min(box[0][2] * m.m[i + 2 * 4],
-		                             box[1][2] * m.m[i + 2 * 4]) +
-		                    m.m[i + 3 * 4];
+		ret[0][i] =
+		    std::min(box[0][0] * m.m[i + 0 * 4], box[1][0] * m.m[i + 0 * 4]) +
+		    std::min(box[0][1] * m.m[i + 1 * 4], box[1][1] * m.m[i + 1 * 4]) +
+		    std::min(box[0][2] * m.m[i + 2 * 4], box[1][2] * m.m[i + 2 * 4]) +
+		    m.m[i + 3 * 4];
 	}
 	ret[0][3] = 0;
 	for (int i = 0; i < 3; i++) {
-		ret[1][i] = std::max(box[0][0] * m.m[i + 0 * 4],
-		                             box[1][0] * m.m[i + 0 * 4]) +
-		                    std::max(box[0][1] * m.m[i + 1 * 4],
-		                             box[1][1] * m.m[i + 1 * 4]) +
-		                    std::max(box[0][2] * m.m[i + 2 * 4],
-		                             box[1][2] * m.m[i + 2 * 4]) +
-		                    m.m[i + 3 * 4];
+		ret[1][i] =
+		    std::max(box[0][0] * m.m[i + 0 * 4], box[1][0] * m.m[i + 0 * 4]) +
+		    std::max(box[0][1] * m.m[i + 1 * 4], box[1][1] * m.m[i + 1 * 4]) +
+		    std::max(box[0][2] * m.m[i + 2 * 4], box[1][2] * m.m[i + 2 * 4]) +
+		    m.m[i + 3 * 4];
 	}
 	ret[1][3] = 0;
 	return ret;
@@ -489,12 +485,12 @@ inline aabb_t mat4::transform_aabb(
 }
 
 inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
-                                                  quat::pref rot,
-                                                  vec3a::pref pos) {
+                                                        quat::pref rot,
+                                                        vec3a::pref pos) {
 #if VML_USE_SSE_AVX
 	const __m128 fff0 =
 	    vml_cast_i_to_v(_mm_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF));
-	
+
 	quad_t r0, r1, r2;
 	quad_t q0, q1;
 	quad_t v0, v1, v2;
@@ -562,25 +558,24 @@ inline mat4::type mat4::from_scale_rotation_translation(scalar_type scale,
 	ret.e[2][2] = scale * (1 - 2 * (xx + yy));
 
 	ret.e[0][3] = ret.e[1][3] = ret.e[2][3] = 0.0f;
-	ret.e[3][0]                     = pos[0];
-	ret.e[3][1]                     = pos[1];
-	ret.e[3][2]                     = pos[2];
-	ret.e[3][3]                     = 1.0f;
+	ret.e[3][0]                             = pos[0];
+	ret.e[3][1]                             = pos[1];
+	ret.e[3][2]                             = pos[2];
+	ret.e[3][3]                             = 1.0f;
 
 	return ret;
 #endif
 }
 
-inline mat4::type mat4::from_scale(
-    vec3a::pref scale) {
+inline mat4::type mat4::from_scale(vec3a::pref scale) {
 #if VML_USE_SSE_AVX
 	mat4_t ret;
-	ret.r[0] = _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(
-	                                 0, 0, 0, 0xFFFFFFFF)));
-	ret.r[1] = _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(
-	                                 0, 0, 0xFFFFFFFF, 0)));
-	ret.r[2] = _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(
-	                                 0, 0xFFFFFFFF, 0, 0)));
+	ret.r[0] =
+	    _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(0, 0, 0, 0xFFFFFFFF)));
+	ret.r[1] =
+	    _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(0, 0, 0xFFFFFFFF, 0)));
+	ret.r[2] =
+	    _mm_and_ps(scale, vml_cast_i_to_v(_mm_set_epi32(0, 0xFFFFFFFF, 0, 0)));
 	ret.r[3] = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);
 	return ret;
 #else
@@ -605,14 +600,14 @@ inline mat4::type mat4::from_scale(
 #endif
 }
 
-inline mat4::type mat4::from_translation(
-    vec3a::pref pos) {
+inline mat4::type mat4::from_translation(vec3a::pref pos) {
 #if VML_USE_SSE_AVX
 	mat4_t ret;
 	ret.r[0] = _mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f);
 	ret.r[1] = _mm_set_ps(0.0f, 0.0f, 1.0f, 0.0f);
 	ret.r[2] = _mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f);
-	ret.r[3] = _mm_or_ps(vec3a::from_vec4(pos), _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f));
+	ret.r[3] =
+	    _mm_or_ps(vec3a::from_vec4(pos), _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f));
 	return ret;
 #else
 	mat4_t ret;
@@ -636,38 +631,34 @@ inline mat4::type mat4::from_translation(
 #endif
 }
 
-inline mat4::type mat4::from_quat(
-    quat::pref rot) {
+inline mat4::type mat4::from_quat(quat::pref rot) {
 	type ret;
 	set_rotation(ret, rot);
 
 #if VML_USE_SSE_AVX
 	ret.r[3] = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);
 #else
-	ret.e[3][0]       = 0;
-	ret.e[3][1]       = 0;
-	ret.e[3][2]       = 0;
-	ret.e[3][3]       = 1.0f;
+	ret.e[3][0] = 0;
+	ret.e[3][1] = 0;
+	ret.e[3][2] = 0;
+	ret.e[3][3] = 1.0f;
 #endif
 	return ret;
 }
 
-inline mat4::type mat4::from_rotation(
-    quat::pref rot) {
-	return from_quat(rot);
-}
+inline mat4::type mat4::from_rotation(quat::pref rot) { return from_quat(rot); }
 
 inline mat4::type mat4::from_world_to_view(pref m) {
 	return inverse_assume_ortho(m);
 }
 
-inline mat4::type mat4::from_look_at(
-    vec3a::pref eye, vec3a::pref look_at, vec3a::pref vup) {
+inline mat4::type mat4::from_look_at(vec3a::pref eye, vec3a::pref look_at,
+                                     vec3a::pref vup) {
 	mat4_t m;
 	vec3a_t zaxis = m.r[2] = vec3a::normalize(vec3a::sub(look_at, eye));
 	vec3a_t xaxis = m.r[0] = vec3a::normalize(vec3a::cross(vup, m.r[2]));
 	vec3a_t yaxis = m.r[1] = vec3a::cross(m.r[2], m.r[0]);
-	m.r[3]                     = vec4::set(0.0f, 0.0f, 0.0f, 1.0f);
+	m.r[3]                 = vec4::set(0.0f, 0.0f, 0.0f, 1.0f);
 	transpose_in_place(m);
 
 	vec3a_t neg_eye = vec3a::negate(eye);
@@ -678,53 +669,53 @@ inline mat4::type mat4::from_look_at(
 }
 
 inline mat4::type mat4::from_orthographic_projection(
-    scalar_type w, scalar_type h, scalar_type zn, scalar_type zf) {
-	float dzRecip = 1.0f / (zf - zn);
-	return {2.0f / w,
-	        0.0f,
-	        0.0f,
-	        0.0f,
-	        0.0f,
-	        2.0f / h,
-	        0.0f,
-	        0.0f,
-	        0.0f,
-	        0.0f,
-	        -2.0f * dzRecip,
-	        0.0f,
-	        0.0f,
-	        0.0f,
-	        -(zn + zf) * dzRecip,
-	        1.0f};
+    scalar_type min_x, scalar_type max_x, scalar_type min_y, scalar_type max_y,
+    scalar_type zn, scalar_type zf) {
+	float dx_recip = 1.0f / (zf - zn);
+	// clang-format off
+	return {
+		2.0f / (max_x - min_x),              0.0f,   	                          0.0f,             0.0f,
+	    0.0f,                                2.0f / (max_y - min_y),              0.0f,             0.0f,
+	    0.0f,                                0.0f,                                dx_recip,         0.0f,
+	    (max_x + min_x) / (min_x - max_x),   (max_y + min_y) / (max_y - min_y),   -(zn) * dx_recip, 1.0f
+	};
+	// clang-format on
 }
 
-inline mat4::type mat4::from_perspective_projection(
-    scalar_type fieldOfView, scalar_type aspectRatio, scalar_type zn,
-    scalar_type zf) {
-	fieldOfView *= 0.5f;
+inline mat4::type mat4::from_orthographic_projection(scalar_type w,
+                                                     scalar_type h,
+                                                     scalar_type zn,
+                                                     scalar_type zf) {
+	float dx_recip = 1.0f / (zf - zn);
+	// clang-format off
+	return {
+		2.0f / w,  0.0f,   	   0.0f,                0.0f,
+	    0.0f,      2.0f / h,   0.0f,                0.0f,
+	    0.0f,      0.0f,       dx_recip,            0.0f,
+	    0.0f,      0.0f,      -(zn) * dx_recip,     1.0f
+	};
+	// clang-format on
+}
 
-	float yscale = 1 / vml::tan(fieldOfView);
+inline mat4::type mat4::from_perspective_projection(scalar_type field_of_view,
+                                                    scalar_type aspect_ratio,
+                                                    scalar_type zn,
+                                                    scalar_type zf) {
+	field_of_view *= 0.5f;
+
+	float yscale = 1 / vml::tan(field_of_view);
 	float q      = zf / (zf - zn);
-	return {(yscale / aspectRatio),
-	        0,
-	        0,
-	        0,
-	        0,
-	        yscale,
-	        0,
-	        0,
-	        0,
-	        0,
-	        q,
-	        1,
-	        0,
-	        0,
-	        -q * zn,
-	        0};
+	// clang-format off
+	return {
+		(yscale / aspect_ratio),        0,        0,        0,
+	     0,                        yscale,        0,        0,
+		 0,                             0,        q,        1,
+		 0,                             0,  -q * zn,        0
+	};
+	// clang-format on
 }
 
-inline mat4::type mat4::mul(pref m,
-                                                        scalar_type scale) {
+inline mat4::type mat4::mul(pref m, scalar_type scale) {
 #if VML_USE_SSE_AVX
 	mat4_t ret;
 	quad_t scaleQ = quad::set(scale);
@@ -734,7 +725,7 @@ inline mat4::type mat4::mul(pref m,
 	ret.r[3]      = m.r[3];
 	return ret;
 #else
-	mat4_t ret = m;
+	mat4_t ret  = m;
 	ret.e[0][0] *= scale;
 	ret.e[0][1] *= scale;
 	ret.e[0][2] *= scale;
@@ -750,25 +741,22 @@ inline mat4::type mat4::mul(pref m,
 #endif
 }
 
-inline mat4::type mat4::mul(scalar_type scale,
-                                                        pref m) {
-	return mul(m, scale);
-}
+inline mat4::type mat4::mul(scalar_type scale, pref m) { return mul(m, scale); }
 
 inline vec4_t mat4::mul(vec4::pref v, mat4::pref m) {
 #if VML_USE_SSE_AVX
 	quad_t ret, v_temp;
-	ret   = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
-	ret   = _mm_mul_ps(ret, m.r[0]);
+	ret    = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+	ret    = _mm_mul_ps(ret, m.r[0]);
 	v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
 	v_temp = _mm_mul_ps(v_temp, m.r[1]);
-	ret   = _mm_add_ps(ret, v_temp);
+	ret    = _mm_add_ps(ret, v_temp);
 	v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp = _mm_mul_ps(v_temp, m.r[2]);
-	ret   = _mm_add_ps(ret, v_temp);
+	ret    = _mm_add_ps(ret, v_temp);
 	v_temp = _mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 3, 3, 3));
 	v_temp = _mm_mul_ps(v_temp, m.r[3]);
-	ret   = _mm_add_ps(ret, v_temp);
+	ret    = _mm_add_ps(ret, v_temp);
 	return ret;
 #else
 	quad_t r, x, y, z, w;
@@ -806,23 +794,23 @@ inline void mat4::transpose_in_place(ref m) {
 #if VML_USE_SSE_AVX
 	_MM_TRANSPOSE4_PS(m.r[0], m.r[1], m.r[2], m.r[3]);
 #else
-	std::swap(m.e[0][1],  m.e[1][0]);
-	std::swap(m.e[0][2],  m.e[2][0]);
-	std::swap(m.e[0][3],  m.e[3][0]);
-	std::swap(m.e[1][2],  m.e[2][1]);
-	std::swap(m.e[1][3],  m.e[3][1]);
-	std::swap(m.e[2][3],  m.e[3][2]);
+	std::swap(m.e[0][1], m.e[1][0]);
+	std::swap(m.e[0][2], m.e[2][0]);
+	std::swap(m.e[0][3], m.e[3][0]);
+	std::swap(m.e[1][2], m.e[2][1]);
+	std::swap(m.e[1][3], m.e[3][1]);
+	std::swap(m.e[2][3], m.e[3][2]);
 #endif
 }
 inline mat4::type mat4::inverse(pref m) {
 #if VML_USE_SSE_AVX
-	mat4_t MT = transpose(m);
-	quad_t V00   = _mm_shuffle_ps(MT.r[2], MT.r[2], _MM_SHUFFLE(1, 1, 0, 0));
-	quad_t V10   = _mm_shuffle_ps(MT.r[3], MT.r[3], _MM_SHUFFLE(3, 2, 3, 2));
-	quad_t V01   = _mm_shuffle_ps(MT.r[0], MT.r[0], _MM_SHUFFLE(1, 1, 0, 0));
-	quad_t V11   = _mm_shuffle_ps(MT.r[1], MT.r[1], _MM_SHUFFLE(3, 2, 3, 2));
-	quad_t V02   = _mm_shuffle_ps(MT.r[2], MT.r[0], _MM_SHUFFLE(2, 0, 2, 0));
-	quad_t V12   = _mm_shuffle_ps(MT.r[3], MT.r[1], _MM_SHUFFLE(3, 1, 3, 1));
+	mat4_t MT  = transpose(m);
+	quad_t V00 = _mm_shuffle_ps(MT.r[2], MT.r[2], _MM_SHUFFLE(1, 1, 0, 0));
+	quad_t V10 = _mm_shuffle_ps(MT.r[3], MT.r[3], _MM_SHUFFLE(3, 2, 3, 2));
+	quad_t V01 = _mm_shuffle_ps(MT.r[0], MT.r[0], _MM_SHUFFLE(1, 1, 0, 0));
+	quad_t V11 = _mm_shuffle_ps(MT.r[1], MT.r[1], _MM_SHUFFLE(3, 2, 3, 2));
+	quad_t V02 = _mm_shuffle_ps(MT.r[2], MT.r[0], _MM_SHUFFLE(2, 0, 2, 0));
+	quad_t V12 = _mm_shuffle_ps(MT.r[3], MT.r[1], _MM_SHUFFLE(3, 1, 3, 1));
 
 	quad_t D0 = _mm_mul_ps(V00, V10);
 	quad_t D1 = _mm_mul_ps(V01, V11);
@@ -923,8 +911,8 @@ inline mat4::type mat4::inverse(pref m) {
 #ifdef L_USE_FAST_DIVISION
 	quad_t v_temp = quad::splat_x(_mm_rcp_ss(quad::vdot(C0, MT.r[0])));
 #else
-	quad_t v_temp =
-	    quad::splat_x(_mm_div_ss(_mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f), quad::vdot(C0, MT.r[0])));
+	quad_t v_temp = quad::splat_x(
+	    _mm_div_ss(_mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f), quad::vdot(C0, MT.r[0])));
 #endif
 	mat4_t result;
 	result.r[0] = _mm_mul_ps(C0, v_temp);
@@ -1027,19 +1015,19 @@ inline mat4::type mat4::inverse_assume_ortho(pref m) {
 	ret.r[2] = _mm_shuffle_ps(ret.r[2], m.r[2], _MM_SHUFFLE(3, 2, 2, 0));
 
 	quad_t v_temp = _mm_shuffle_ps(m.r[3], m.r[3], _MM_SHUFFLE(0, 0, 0, 0));
-	ret.r[3]     = _mm_mul_ps(v_temp, ret.r[0]);
+	ret.r[3]      = _mm_mul_ps(v_temp, ret.r[0]);
 	v_temp        = _mm_shuffle_ps(m.r[3], m.r[3], _MM_SHUFFLE(1, 1, 1, 1));
 	v_temp        = _mm_mul_ps(v_temp, ret.r[1]);
-	ret.r[3]     = _mm_add_ps(ret.r[3], v_temp);
+	ret.r[3]      = _mm_add_ps(ret.r[3], v_temp);
 	v_temp        = _mm_shuffle_ps(m.r[3], m.r[3], _MM_SHUFFLE(2, 2, 2, 2));
 	v_temp        = _mm_mul_ps(v_temp, ret.r[2]);
-	ret.r[3]     = _mm_add_ps(ret.r[3], v_temp);
-	ret.r[3]     = _mm_xor_ps(ret.r[3], vml_cast_i_to_v(_mm_set1_epi32(0x80000000)));
+	ret.r[3]      = _mm_add_ps(ret.r[3], v_temp);
+	ret.r[3] = _mm_xor_ps(ret.r[3], vml_cast_i_to_v(_mm_set1_epi32(0x80000000)));
 	// and with 0001
 	ret.r[3] = _mm_or_ps(_mm_and_ps(ret.r[3], VML_CLEAR_W_VEC), VML_XYZ0_W1_VEC);
 
 	assert(ret.e[0][3] == 0.f && ret.e[1][3] == 0.f && ret.e[2][3] == 0.f &&
-	         ret.e[3][3] == 1.f);
+	       ret.e[3][3] == 1.f);
 	return ret;
 #else
 	mat4_t ret;

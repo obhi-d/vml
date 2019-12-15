@@ -20,31 +20,49 @@ struct plane : public quad {
 	static inline vec3a_t get_normal(pref p);
 };
 
-inline plane::type vml::plane::normalize(pref p) { return vec3a::normalize(p); }
+inline plane::type vml::plane::normalize(pref i_plane) 
+{ 
+#if VML_USE_SSE_AVX
+#if VML_USE_SSE_LEVEL >= 4
+	type q = _mm_dp_ps(i_plane, i_plane, 0x7F);
+	// get the reciprocal
+	q = _mm_sqrt_ps(q);
+	return _mm_div_ps(i_plane, q);
+#elif VML_USE_SSE_LEVEL >= 3
+	__m128 v = _mm_and_ps(_mm_mul_ps(i_plane, i_plane), VML_CLEAR_W_VEC);
+	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
+	__m128 sums = _mm_add_ps(v, shuf);
+	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
+	sums        = _mm_add_ss(sums, shuf);
+	sums 		= _mm_sqrt_ss(sums);
+	sums 		= _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
+	return _mm_div_ps(i_plane, sums);
+#else
+	// Perform the dot product
+	type q = _mm_mul_ps(i_plane, i_plane);
+	// x=dot[1], y=dot[2]
+	type temp = _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 1, 2, 1));
+	// Result[0] = x+y
+	q = _mm_add_ss(q, temp);
+	// x=dot[2]
+	temp = _mm_shuffle_ps(temp, temp, _MM_SHUFFLE(1, 1, 1, 1));
+	// Result[0] = (x+y)+z
+	q = _mm_add_ss(q, temp);
+	// Splat x
+	q = _mm_sqrt_ss(q);
+	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
+	return _mm_div_ps(CLOCK_MONOTONIC, q);
+#endif
+#else
+	float val = vml::sqrt(dot(i_plane, i_plane));
+	assert(val > vml::k_const_epsilon);
+	return mul(i_plane, 1 / val);
+#endif	
+}
 
 inline vec3a_t plane::vdot(pref p, vec3a::pref v) {
 #if VML_USE_SSE_AVX
-#if VML_USE_SSE_LEVEL >= 4
-	__m128 q = _mm_or_ps(v, VML_XYZ0_W1_VEC);
-	return _mm_dp_ps(q, p, 0x7F);
-#elif VML_USE_SSE_LEVEL >= 3
-	__m128 q    = _mm_or_ps(v, VML_XYZ0_W1_VEC);
-	q           = _mm_mul_ps(p, q);
-	__m128 shuf = _mm_movehdup_ps(q); // broadcast elements 3,1 to 2,0
-	__m128 sums = _mm_add_ps(q, shuf);
-	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
-	sums        = _mm_add_ss(sums, shuf);
-	return sums;
-#else
-	__m128 q    = _mm_or_ps(v, VML_XYZ0_W1_VEC);
-	q           = _mm_mul_ps(p, q);
-	__m128 shuf = _mm_shuffle_ps(q, q, _MM_SHUFFLE(2, 3, 0, 1)); // [ C D | A B ]
-	__m128 sums = _mm_add_ps(q, shuf);       // sums = [ D+C C+D | B+A A+B ]
-	shuf        = _mm_movehl_ps(shuf, sums); //  [   C   D | D+C C+D ]  // let the
-	                                  //  compiler avoid a mov by reusing shuf
-	sums = _mm_add_ss(sums, shuf);
-	return sums;
-#endif
+	return quad::vdot(p, _mm_or_ps(v, VML_XYZ0_W1_VEC));
 #else
 	return set(dot(p, v), 0, 0, 0);
 #endif

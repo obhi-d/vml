@@ -21,11 +21,11 @@ struct bounds_info {
 			if (_.radius <= 0)
 				_ = info;
 			else {
+				vec3_t min_p = vec3::min(vec3::sub(_.center, _.half_extends), vec3::sub(info.center, info.half_extends));
+				vec3_t max_p = vec3::max(vec3::add(_.center, _.half_extends), vec3::add(info.center, info.half_extends));
 				vec3_t a       = vec3::abs(vec3::sub(_.center, info.center));
-				vec3_t b       = vec3::add(_.center, info.center);
-				_.center       = vec3::half(b);
-				_.half_extends = vec3::half(
-				    vec3::add(a, vec3::add(_.half_extends, info.half_extends)));
+				_.center       = vec3::half(vec3::add(min_p, max_p));
+				_.half_extends = vec3::half(vec3::sub(max_p, min_p));
 				_.radius += (info.radius + vml::sqrt(vec3::dot(a, a)));
 				_.radius *= 0.5f;
 			}
@@ -103,7 +103,7 @@ inline bounding_volume::type bounding_volume::from_box(
     vec3a_t const& center, vec3a_t const& half_extends) {
 	bounding_volume_t _;
 	_.spherical_vol = _.orig_spherical_vol =
-	    sphere::set(center, sphere::max_radius(vec3a::mul(half_extends, 2.0f)));
+	    sphere::set(center, sphere::max_radius(half_extends));
 	_.half_extends = _.orig_half_extends = half_extends;
 	return _;
 }
@@ -169,14 +169,14 @@ inline void bounding_volume::update(bounding_volume_t& _,
 	vec3a_t center_other = center(vol);
 
 	vec3a_t a = vec3a::abs(vec3a::sub(center_this, center_other));
-	vec3a_t b = vec3a::add(center_this, center_other);
-
+	vec3a_t min_p = vec3a::min(vec3a::sub(center_this, _.half_extends), vec3a::sub(center_other, vol.half_extends));
+	vec3a_t max_p = vec3a::max(vec3a::add(center_this, _.half_extends), vec3a::add(center_other, vol.half_extends));
+	_.half_extends = vec3a::half(vec3a::sub(max_p, min_p));
 	_.spherical_vol = vec3a::set_w(
-	    vec3a::half(b),
-	    quad::x(vec3a::add_x(vec3a::add_x(sphere::vradius(vol.spherical_vol),
+	    vec3a::half(vec3a::add(min_p, max_p)),
+	    vec3a::half_x(vec3a::add_x(vec3a::add_x(sphere::vradius(vol.spherical_vol),
 	                                      sphere::vradius(_.spherical_vol)),
-	                         vec3a::vdot(a, a))));
-	_.half_extends = vec3a::add(a, vec3a::add(vol.half_extends, _.half_extends));
+	                         vec3a::sqrt_x(vec3a::vdot(a, a)))));
 	_.orig_spherical_vol = _.spherical_vol;
 	_.orig_half_extends  = _.half_extends;
 }
