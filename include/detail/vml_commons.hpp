@@ -137,7 +137,7 @@ inline pointer_arg* allocate(std::size_t amount, std::size_t alignment) {
 #ifdef _MSC_VER
 	return reinterpret_cast<pointer_arg*>(_aligned_malloc(amount, alignment));
 #else
-	return reinterpret_cast<pointer_arg*>(aligned_alloc(amount, alignment));
+	return reinterpret_cast<pointer_arg*>(aligned_alloc(alignment, amount));
 #endif
 }
 

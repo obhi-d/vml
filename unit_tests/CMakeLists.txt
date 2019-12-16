@@ -4,7 +4,7 @@ project(cpphash_general_tests)
 include(ExternalProject)
 
 ExternalProject_Add(benchmark
-  GIT_REPOSITORY https://github.com/google/benchmark.git
+#  GIT_REPOSITORY https://github.com/google/benchmark.git
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/benchmark"
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/benchmark
 	STEP_TARGETS install 
@@ -16,7 +16,7 @@ ExternalProject_Add(benchmark
 )
 
 ExternalProject_Add(Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+#  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/Catch2"
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/Catch2
   STEP_TARGETS install 
@@ -35,6 +35,8 @@ macro(validity_test test_name definitions compile_flags link_options)
     validity/bounding_volume.cpp
     validity/euler_angles.cpp
     validity/frustum.cpp
+    validity/intersect.cpp
+    validity/plane.cpp
     validity/main.cpp)
   add_test(vmltest-validity-${test_name} validity-cpp)
   add_dependencies(vmltest-validity-${test_name} Catch2-install)

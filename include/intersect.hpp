@@ -5,7 +5,7 @@
 
 namespace vml {
 namespace intersect {
-enum result_t : std::uint32_t { k_outside = 0, k_inside, k_intersecting };
+enum class result_t : std::uint32_t { k_outside = 0, k_inside, k_intersecting };
 
 /** @remarks Test bounding volume bounding volume */
 inline result_t bounding_volumes(bounding_volume_t const& i_vol1,

@@ -2,7 +2,10 @@
 #include <vml.hpp>
 
 TEST_CASE("Validate bounds_info::update", "[bounds_info::update]") {
-    vml::bounds_info_t bounds1 = {
+	vml::bounds_info_t bounds = {
+	    {-2.0f, -2.0f, -2.0f}, {2.0f, 2.0f, 2.0f}, -1.0f};
+
+	vml::bounds_info_t bounds1 = {
         {-2.0f, -2.0f, -2.0f},
         {2.0f, 2.0f, 2.0f},
         3.4641f
@@ -13,7 +16,8 @@ TEST_CASE("Validate bounds_info::update", "[bounds_info::update]") {
         3.4641f
     };
 
-    vml::bounds_info_t bounds = vml::bounds_info::update(bounds1, bounds2);
+	vml::bounds_info::update(bounds, bounds1);
+    vml::bounds_info::update(bounds, bounds2);
 
     REQUIRE(vml::vec3::x(bounds.center) == Approx(0.0f));
     REQUIRE(vml::vec3::y(bounds.center) == Approx(0.0f));
