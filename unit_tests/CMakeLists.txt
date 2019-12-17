@@ -42,7 +42,7 @@ macro(validity_test test_name definitions compile_flags link_options)
     validity/mat4.cpp
     validity/quad.cpp
     validity/main.cpp)
-  add_test(vmltest-validity-${test_name} validity-cpp)
+  add_test(validity-${test_name} vmltest-validity-${test_name})
   add_dependencies(vmltest-validity-${test_name} Catch2-install)
   target_include_directories(vmltest-validity-${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/out/external/install/include")
   target_include_directories(vmltest-validity-${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/include")

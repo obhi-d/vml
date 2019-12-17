@@ -15,11 +15,11 @@ struct real {
 	enum { element_count = 1 };
 
 	inline static bool equals(pref v1, pref v2) {
-		if (vml::almost_equals_ulps(v1, v2, 2))
+		if (vml::almost_equals_ulps(v1, v2, 4))
 			return true;
 		return vml::almost_equals_rel_or_abs(v1, v2,
 		                                         vml::k_max_relative_error,
-		                                         std::numeric_limits<type>::min());
+		                                         vml::k_const_epsilon);
 
 	}
 

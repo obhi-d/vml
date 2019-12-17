@@ -297,16 +297,16 @@ inline bool almost_equals_ulps(float i_a, float i_b, int max_ulps) {
 }
 
 inline bool almost_equals_rel_or_abs(float i_a, float i_b,
-                                          float max_rel_err,
-                                          float max_abs_err) {
-	if (fabs(i_a - i_b) < max_abs_err)
+                                          float max_diff,
+                                          float max_rel_diff) {
+	float diff = fabs(i_a - i_b);
+	if (diff < max_diff)
 		return true;
 	float relativeError;
-	if (fabs(i_b) > fabs(i_a))
-		relativeError = fabs((i_a - i_b) / i_b);
-	else
-		relativeError = fabs((i_a - i_b) / i_a);
-	if (relativeError <= max_rel_err)
+	i_a = fabs(i_a);
+	i_b = fabs(i_b);
+	float largest = i_b > i_a ? i_b : i_a;
+	if (diff <= largest * max_rel_diff)
 		return true;
 	return false;
 }

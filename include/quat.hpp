@@ -57,7 +57,7 @@ inline quat::type quat::from_axis_angle(axis_angle_t const& axis) {
 	assert(VML_FLOAT_TOLERANCE_EQUAL(len, 1, vml::k_const_epsilon_med));
 #endif
 	quad_t N = axis_angle::axis(axis);
-	N        = _mm_or_ps(N, _mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f));
+	N        = _mm_or_ps(N, _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f));
 
 	auto sc            = vml::sin_cos(quad::w(axis) * .5f);
 	quad_t vSineCosine = quad::set(sc.first, sc.first, sc.first, sc.second);

@@ -136,72 +136,40 @@ inline vec3a_t mat_base<concrete>::rotate(pref m, vec3a::pref v) {
 }
 
 template <typename concrete>
-inline void mat_base<concrete>::set_rotation(ref ret, quat::pref rot) {
-#if VML_USE_SSE_AVX
-	quad_t r0, r1, r2;
-	quad_t q0, q1;
-	quad_t v0, v1, v2;
-
-	q0 = _mm_add_ps(rot, rot);
-	q1 = _mm_mul_ps(rot, q0);
-
-	v0 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 0, 0, 1));
-	v0 = _mm_and_ps(v0, VML_CLEAR_W_VEC);
-	v1 = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(3, 1, 2, 2));
-	v1 = _mm_and_ps(v1, VML_CLEAR_W_VEC);
-	r0 = _mm_sub_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), v0);
-	r0 = _mm_sub_ps(r0, v1);
-
-	v0 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 1, 0, 0));
-	v1 = _mm_shuffle_ps(q0, q0, _MM_SHUFFLE(3, 2, 1, 2));
-	v0 = _mm_mul_ps(v0, v1);
-
-	v1 = _mm_shuffle_ps(rot, rot, _MM_SHUFFLE(3, 3, 3, 3));
-	v2 = _mm_shuffle_ps(q0, q0, _MM_SHUFFLE(3, 0, 2, 1));
-	v1 = _mm_mul_ps(v1, v2);
-
-	r1 = _mm_add_ps(v0, v1);
-	r2 = _mm_sub_ps(v0, v1);
-
-	v0 = _mm_shuffle_ps(r1, r2, _MM_SHUFFLE(1, 0, 2, 1));
-	v0 = _mm_shuffle_ps(v0, v0, _MM_SHUFFLE(1, 3, 2, 0));
-	v1 = _mm_shuffle_ps(r1, r2, _MM_SHUFFLE(2, 2, 0, 0));
-	v1 = _mm_shuffle_ps(v1, v1, _MM_SHUFFLE(2, 0, 2, 0));
-
-	q1       = _mm_shuffle_ps(r0, v0, _MM_SHUFFLE(1, 0, 3, 0));
-	q1       = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 3, 2, 0));
-	ret.r[0] = q1;
-	q1       = _mm_shuffle_ps(r0, v0, _MM_SHUFFLE(3, 2, 3, 1));
-	q1       = _mm_shuffle_ps(q1, q1, _MM_SHUFFLE(1, 3, 0, 2));
-	ret.r[1] = q1;
-	q1       = _mm_shuffle_ps(v1, r0, _MM_SHUFFLE(3, 2, 1, 0));
-	ret.r[2] = q1;
-#else
-	scalar_type xx = rot[0] * rot[0];
-	scalar_type yy = rot[1] * rot[1];
-	scalar_type zz = rot[2] * rot[2];
-	scalar_type xy = rot[0] * rot[1];
-	scalar_type xz = rot[0] * rot[2];
-	scalar_type yz = rot[1] * rot[2];
-	scalar_type wx = rot[3] * rot[0];
-	scalar_type wy = rot[3] * rot[1];
-	scalar_type wz = rot[3] * rot[2];
-
-	ret.e[0][0] = (1 - 2 * (yy + zz));
-	ret.e[0][1] = (2 * (xy + wz));
-	ret.e[0][2] = (2 * (xz - wy));
-	ret.e[0][3] = 0;
-
-	ret.e[1][0] = (2 * (xy - wz));
-	ret.e[1][1] = (1 - 2 * (xx + zz));
-	ret.e[1][2] = (2 * (yz + wx));
-	ret.e[1][3] = 0;
-
-	ret.e[2][0] = (2 * (xz + wy));
-	ret.e[2][1] = (2 * (yz - wx));
-	ret.e[2][2] = (1 - 2 * (xx + yy));
-	ret.e[2][3] = 0;
-#endif
+inline void mat_base<concrete>::set_rotation(ref m, quat::pref rot) {
+	scalar_type q[4]   = {quat::x(rot), quat::y(rot), quat::z(rot), quat::w(rot)};
+	m.e[0][3] = 0.0f;
+	m.e[1][3] = 0.0f;
+	m.e[2][3] = 0.0f;
+	scalar_type x2     = q[0] + q[0];
+	scalar_type y2     = q[1] + q[1];
+	scalar_type z2     = q[2] + q[2];
+	{
+		scalar_type xx2    = q[0] * x2;
+		scalar_type yy2    = q[1] * y2;
+		scalar_type zz2    = q[2] * z2;
+		m.e[0][0] = 1.0f - yy2 - zz2;
+		m.e[1][1] = 1.0f - xx2 - zz2;
+		m.e[2][2] = 1.0f - xx2 - yy2;
+	}
+	{
+		scalar_type yz2    = q[1] * z2;
+		scalar_type wx2    = q[3] * x2;
+		m.e[2][1] = yz2 - wx2;
+		m.e[1][2] = yz2 + wx2;
+	}
+	{
+		scalar_type xy2 = q[0] * y2;
+		scalar_type wz2 = q[3] * z2;
+		m.e[1][0] = xy2 - wz2;
+		m.e[0][1] = xy2 + wz2;
+	}
+	{
+		scalar_type xz2 = q[0] * z2;
+		scalar_type wy2 = q[3] * y2;
+		m.e[0][2] = xz2 - wy2;
+		m.e[2][0] = xz2 + wy2;
+	}
 }
 
 template <typename concrete>
