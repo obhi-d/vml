@@ -37,6 +37,10 @@ macro(validity_test test_name definitions compile_flags link_options)
     validity/frustum.cpp
     validity/intersect.cpp
     validity/plane.cpp
+    validity/axis_angle.cpp
+    validity/mat3.cpp
+    validity/mat4.cpp
+    validity/quad.cpp
     validity/main.cpp)
   add_test(vmltest-validity-${test_name} validity-cpp)
   add_dependencies(vmltest-validity-${test_name} Catch2-install)
@@ -56,8 +60,8 @@ set(VML_COMMON_CXX_LINK_FLAGS "")
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(VML_SSE3_CXX_FLAGS "-msse3")
   set(VML_AVX_CXX_FLAGS "-mavx")
-  set(VML_COMMON_CXX_FLAGS "-fsanitize=address;-fno-omit-frame-pointer")
-  set(VML_COMMON_CXX_LINK_FLAGS "-fsanitize=address")
+  set(VML_COMMON_CXX_FLAGS "-fsanitize=address;-fno-omit-frame-pointer;-ftest-coverage;-fprofile-instr-generate;-fcoverage-mapping")
+  set(VML_COMMON_CXX_LINK_FLAGS "-fsanitize=address;-fprofile-instr-generate")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(VML_SSE3_CXX_FLAGS "-msse3")
   set(VML_AVX_CXX_FLAGS "-mavx")

@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 #include <vml.hpp>
+#include <cstring>
 
 TEST_CASE("Validate intersect::bounding_volume_frustum_coherent",
           "[intersect::bounding_volume_frustum_coherent]") {
@@ -15,12 +16,21 @@ TEST_CASE("Validate intersect::bounding_volume_frustum_coherent",
 	custom_planes[6] = vml::plane::set(
 	    vml::frustum::get_plane(frustum_orig, vml::frustum::plane_type::k_far),
 	    900.0f);
+	
 	custom_planes[7] = vml::plane::set(
 	    vml::frustum::get_plane(frustum_orig, vml::frustum::plane_type::k_near),
 	    -10.0f);
 
 	vml::frustum_t custom = vml::frustum::from_planes(
-	    custom_planes.data(), static_cast<std::uint32_t>(custom_planes.size()));
+	    nullptr, static_cast<std::uint32_t>(custom_planes.size()));
+	std::uint32_t idx = 0;
+	for(auto& p : custom_planes)
+		vml::frustum::set_plane(custom, idx++, p);
+
+	vml::frustum_t copy;
+	copy = custom;
+	vml::frustum_t inter(std::move(copy));
+	custom = std::move(inter);
 
 	vml::frustum::coherency state = vml::frustum::default_coherency(6);
 

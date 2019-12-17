@@ -18,8 +18,23 @@ template <typename scalar_t> using sphere_t       = quad_t<scalar_t>;
 template <typename scalar_t> using axis_angle_t   = quad_t<scalar_t>;
 template <typename scalar_t> using polar_coord_t  = vec2_t<scalar_t>;
 template <typename scalar_t> using euler_angles_t = vec3_t<scalar_t>;
-template <typename scalar_t> using rect_t = std::array<vec2_t<scalar_t>, 2>;
-template <typename scalar_t> using aabb_t = std::array<vec3a_t<scalar_t>, 2>;
+
+template <typename scalar_t> 
+struct rect_t {
+  union {
+    vec2_t<scalar_t> r[2];
+    std::array<vec2_t<scalar_t>, 2> m;
+    scalar_t e[2][2];
+  };
+};
+
+template <typename scalar_t> struct aabb_t {
+  union {
+    vec3a_t<scalar_t> r[2];
+    std::array<vec3a_t<scalar_t>, 2> m;
+    scalar_t e[2][4];
+  };
+};
 
 template <typename scalar_t>
 struct mat4_t {

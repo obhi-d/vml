@@ -42,48 +42,48 @@ struct aabb : public mat_base<detail::aabb_traits> {
 
 inline bool vml::aabb::is_valid(pref box) {
 #if VML_USE_SSE_AVX
-	return _mm_movemask_epi8(_mm_castps_si128(_mm_cmplt_ps(box[1], box[0]))) == 0;
+	return _mm_movemask_epi8(_mm_castps_si128(_mm_cmplt_ps(box.r[1], box.r[0]))) == 0;
 #else
 	for (int i = 0; i < 3; ++i)
-		if (box[1][i] < box[0][i])
+		if (box.r[1][i] < box.r[0][i])
 			return false;
 	return true;
 #endif
 }
 inline vec3a_t aabb::center(pref box) {
-	return vec3a::half(vec3a::add(box[1], box[0]));
+	return vec3a::half(vec3a::add(box.r[1], box.r[0]));
 }
-inline vec3a_t aabb::size(pref box) { return vec3a::sub(box[1], box[0]); }
+inline vec3a_t aabb::size(pref box) { return vec3a::sub(box.r[1], box.r[0]); }
 inline vec3a_t aabb::half_size(pref box) {
-	return vec3a::half(vec3a::sub(box[1], box[0]));
+	return vec3a::half(vec3a::sub(box.r[1], box.r[0]));
 }
 inline vec3a_t aabb::corner(pref box, unsigned int i) {
-	return vec3a::set(vec3a::x(box[((i >> 2) & 1)]),
-	                  vec3a::y(box[((i >> 1) & 1)]),
-	                  vec3a::z(box[((i >> 0) & 1)]));
+	return vec3a::set(vec3a::x(box.r[((i >> 2) & 1)]),
+	                  vec3a::y(box.r[((i >> 1) & 1)]),
+	                  vec3a::z(box.r[((i >> 0) & 1)]));
 }
 inline aabb::type aabb::append(pref b, vec3a::pref point) {
 #if VML_USE_SSE_AVX
-	return {_mm_min_ps(b[0], point), _mm_max_ps(b[1], point)};
+	return {_mm_min_ps(b.r[0], point), _mm_max_ps(b.r[1], point)};
 #else
 	aabb_t box = b;
 	for (int i = 0; i < 3; ++i) {
-		if (box[0][i] > point[i])
-			box[0][i] = point[i];
-		if (box[1][i] < point[i])
-			box[1][i] = point[i];
+		if (box.r[0][i] > point[i])
+			box.r[0][i] = point[i];
+		if (box.r[1][i] < point[i])
+			box.r[1][i] = point[i];
 	}
 	return box;
 #endif
 }
 inline aabb::type aabb::append(pref box, pref other) {
 #if VML_USE_SSE_AVX
-	return {_mm_min_ps(box[0], other[0]), _mm_max_ps(box[1], other[1])};
+	return {_mm_min_ps(box.r[0], other.r[0]), _mm_max_ps(box.r[1], other.r[1])};
 #else
 	aabb_t ret;
 	for (int i = 0; i < 3; ++i) {
-		ret[0][i] = (box[0][i] > other[0][i]) ? other[0][i] : box[0][i];
-		ret[1][i] = (box[1][i] < other[1][i]) ? other[1][i] : box[1][i];
+		ret.r[0][i] = (box.r[0][i] > other.r[0][i]) ? other.r[0][i] : box.r[0][i];
+		ret.r[1][i] = (box.r[1][i] < other.r[1][i]) ? other.r[1][i] : box.r[1][i];
 	}
 	return ret;
 #endif

@@ -27,16 +27,12 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	using typename mat_base<detail::mat4_traits>::row_tag;
 	using typename mat_base<detail::mat4_traits>::scalar_type;
 
+	//! @brief Returns identity matrix
+	static inline mat4_t identity();
 	//! @brief Returns maximum scaling
 	static inline float max_scale(mat4_t const&);
 	//! @brief Full matrix multiplication
 	static inline type mul(pref m1, pref m2);
-	//! @brief transform vertices assuming orthogonal matrix
-	static inline void transform_assume_ortho(pref m, const vec3::type* i_stream,
-	                                          std::uint32_t i_stride,
-	                                          std::uint32_t count,
-	                                          vec4_t* o_stream,
-	                                          std::uint32_t i_output_stride);
 	//! @brief transform vertices assuming orthogonal matrix
 	static inline void transform_assume_ortho(pref m, const vec3::type* i_stream,
 	                                          std::uint32_t i_stride,
@@ -48,14 +44,14 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	                                          std::uint32_t i_stride,
 	                                          std::uint32_t count);
 	//! @brief transform vertices and project the w coord as 1.0.
-	static inline void transform(pref m, const vec3::type* i_stream,
+	static inline void transform_and_project(pref m, const vec3::type* i_stream,
 	                             std::uint32_t i_stride, std::uint32_t count,
 	                             vec3::type* o_stream,
 	                             std::uint32_t i_output_stride);
 	//! @brief transform vertices assuming orthogonal matrix
 	static inline vec3a_t transform_assume_ortho(pref m, vec3a::pref v);
 	//! @brief transform vertices and project the w coord as 1.0.
-	static inline vec3a_t transform(pref m, vec3a::pref v);
+	static inline vec3a_t transform_and_project(pref m, vec3a::pref v);
 	//! @brief Special transform for AABB bound extends.
 	static inline vec3a_t transform_bounds_extends(pref m, vec3a::pref extends);
 	//! @brief Special transform for AABB min and max
@@ -99,8 +95,18 @@ struct mat4 : public mat_base<detail::mat4_traits> {
 	static inline type inverse(pref m);
 	//! @brief inverse for orthogonal matrix
 	static inline type inverse_assume_ortho(pref m);
+	static inline mat3_t const& as_mat3(mat4_t const& m);
+	static inline mat3_t& as_mat3(mat4_t& m);
 };
 
+inline mat4_t mat4::identity() {
+	return {
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+	    };
+}
 inline float mat4::max_scale(mat4_t const& m) {
 	return vml::sqrt(
 	    std::max(std::max(quad::sqlength(m.r[0]), quad::sqlength(m.r[1])),
@@ -191,7 +197,7 @@ inline mat4::type mat4::mul(pref m1, pref m2) {
 
 inline void mat4::transform_assume_ortho(pref m, const vec3::type* inpstream,
                                          std::uint32_t inpstride,
-                                         std::uint32_t count, vec4_t* outstream,
+                                         std::uint32_t count, vec3::type* outstream,
                                          std::uint32_t outstride) {
 #if VML_USE_SSE_AVX
 	assert(outstream);
@@ -237,7 +243,6 @@ inline void mat4::transform_assume_ortho(pref m, const vec3::type* inpstream,
 		((float*)out_vec)[0] = r[0];
 		((float*)out_vec)[1] = r[1];
 		((float*)out_vec)[2] = r[2];
-		((float*)out_vec)[3] = r[3];
 
 		inp_vec += inpstride;
 		out_vec += outstride;
@@ -291,7 +296,7 @@ inline void mat4::transform_assume_ortho(pref m, vec3::type* io_stream,
 #endif
 }
 
-inline void mat4::transform(pref m, const vec3::type* inpstream,
+inline void mat4::transform_and_project(pref m, const vec3::type* inpstream,
                             std::uint32_t inpstride, std::uint32_t count,
                             vec3::type* outstream, std::uint32_t outstride) {
 #if VML_USE_SSE_AVX
@@ -343,7 +348,6 @@ inline void mat4::transform(pref m, const vec3::type* inpstream,
 		((float*)out_vec)[0] = r[0];
 		((float*)out_vec)[1] = r[1];
 		((float*)out_vec)[2] = r[2];
-		((float*)out_vec)[3] = r[3];
 
 		inp_vec += inpstride;
 		out_vec += outstride;
@@ -378,7 +382,7 @@ inline vec3a::type mat4::transform_assume_ortho(pref m, vec3a::pref v) {
 #endif
 }
 
-inline vec3a::type mat4::transform(pref m, vec3a::pref v) {
+inline vec3a::type mat4::transform_and_project(pref m, vec3a::pref v) {
 #if VML_USE_SSE_AVX
 	quad_t ret;
 	ret           = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
@@ -439,24 +443,24 @@ inline vec3a::type mat4::transform_bounds_extends(pref m, vec3a::pref v) {
 inline aabb_t mat4::transform_aabb(pref m, aabb::pref box) {
 #if VML_USE_SSE_AVX
 	aabb_t ret;
-	quad_t max0 = _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(0, 0, 0, 0));
+	quad_t max0 = _mm_shuffle_ps(box.r[1], box.r[1], _MM_SHUFFLE(0, 0, 0, 0));
 	max0        = _mm_mul_ps(max0, m.r[0]);
-	quad_t min0 = _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(0, 0, 0, 0));
+	quad_t min0 = _mm_shuffle_ps(box.r[0], box.r[0], _MM_SHUFFLE(0, 0, 0, 0));
 	min0        = _mm_mul_ps(min0, m.r[0]);
-	quad_t max1 = _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(1, 1, 1, 1));
+	quad_t max1 = _mm_shuffle_ps(box.r[1], box.r[1], _MM_SHUFFLE(1, 1, 1, 1));
 	max1        = _mm_mul_ps(max1, m.r[1]);
-	quad_t min1 = _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(1, 1, 1, 1));
+	quad_t min1 = _mm_shuffle_ps(box.r[0], box.r[0], _MM_SHUFFLE(1, 1, 1, 1));
 	min1        = _mm_mul_ps(min1, m.r[1]);
-	quad_t max2 = _mm_shuffle_ps(box[1], box[1], _MM_SHUFFLE(2, 2, 2, 2));
+	quad_t max2 = _mm_shuffle_ps(box.r[1], box.r[1], _MM_SHUFFLE(2, 2, 2, 2));
 	max2        = _mm_mul_ps(max2, m.r[2]);
-	quad_t min2 = _mm_shuffle_ps(box[0], box[0], _MM_SHUFFLE(2, 2, 2, 2));
+	quad_t min2 = _mm_shuffle_ps(box.r[0], box.r[0], _MM_SHUFFLE(2, 2, 2, 2));
 	min2        = _mm_mul_ps(min2, m.r[2]);
 
-	ret[0] = _mm_add_ps(
+	ret.r[0] = _mm_add_ps(
 	    _mm_add_ps(_mm_min_ps(max0, min0),
 	               _mm_add_ps(_mm_min_ps(max1, min1), _mm_min_ps(max2, min2))),
 	    m.r[3]);
-	ret[1] = _mm_add_ps(
+	ret.r[1] = _mm_add_ps(
 	    _mm_add_ps(_mm_max_ps(max0, min0),
 	               _mm_add_ps(_mm_max_ps(max1, min1), _mm_max_ps(max2, min2))),
 	    m.r[3]);
@@ -464,21 +468,21 @@ inline aabb_t mat4::transform_aabb(pref m, aabb::pref box) {
 #else
 	aabb_t ret;
 	for (int i = 0; i < 3; i++) {
-		ret[0][i] =
-		    std::min(box[0][0] * m.m[i + 0 * 4], box[1][0] * m.m[i + 0 * 4]) +
-		    std::min(box[0][1] * m.m[i + 1 * 4], box[1][1] * m.m[i + 1 * 4]) +
-		    std::min(box[0][2] * m.m[i + 2 * 4], box[1][2] * m.m[i + 2 * 4]) +
+		ret.r[0][i] =
+		    std::min(box.r[0][0] * m.m[i + 0 * 4], box.r[1][0] * m.m[i + 0 * 4]) +
+		    std::min(box.r[0][1] * m.m[i + 1 * 4], box.r[1][1] * m.m[i + 1 * 4]) +
+		    std::min(box.r[0][2] * m.m[i + 2 * 4], box.r[1][2] * m.m[i + 2 * 4]) +
 		    m.m[i + 3 * 4];
 	}
-	ret[0][3] = 0;
+	ret.r[0][3] = 0;
 	for (int i = 0; i < 3; i++) {
-		ret[1][i] =
-		    std::max(box[0][0] * m.m[i + 0 * 4], box[1][0] * m.m[i + 0 * 4]) +
-		    std::max(box[0][1] * m.m[i + 1 * 4], box[1][1] * m.m[i + 1 * 4]) +
-		    std::max(box[0][2] * m.m[i + 2 * 4], box[1][2] * m.m[i + 2 * 4]) +
+		ret.r[1][i] =
+		    std::max(box.r[0][0] * m.m[i + 0 * 4], box.r[1][0] * m.m[i + 0 * 4]) +
+		    std::max(box.r[0][1] * m.m[i + 1 * 4], box.r[1][1] * m.m[i + 1 * 4]) +
+		    std::max(box.r[0][2] * m.m[i + 2 * 4], box.r[1][2] * m.m[i + 2 * 4]) +
 		    m.m[i + 3 * 4];
 	}
-	ret[1][3] = 0;
+	ret.r[1][3] = 0;
 	return ret;
 
 #endif
@@ -722,7 +726,7 @@ inline mat4::type mat4::mul(pref m, scalar_type scale) {
 	ret.r[0]      = _mm_mul_ps(scaleQ, m.r[0]);
 	ret.r[1]      = _mm_mul_ps(scaleQ, m.r[1]);
 	ret.r[2]      = _mm_mul_ps(scaleQ, m.r[2]);
-	ret.r[3]      = m.r[3];
+	ret.r[3]      = _mm_mul_ps(scaleQ, m.r[3]);
 	return ret;
 #else
 	mat4_t ret  = m;
@@ -737,6 +741,10 @@ inline mat4::type mat4::mul(pref m, scalar_type scale) {
 	ret.e[2][0] *= scale;
 	ret.e[2][1] *= scale;
 	ret.e[2][2] *= scale;
+
+	ret.e[3][0] *= scale;
+	ret.e[3][1] *= scale;
+	ret.e[3][2] *= scale;
 	return ret;
 #endif
 }
@@ -1045,4 +1053,12 @@ inline mat4::type mat4::inverse_assume_ortho(pref m) {
 
 #endif
 }
+inline mat3_t const& mat4::as_mat3(mat4_t const& m) {
+	return reinterpret_cast<mat3_t const&>(m);
+}
+
+inline mat3_t& mat4::as_mat3(mat4_t& m) {
+	return reinterpret_cast<mat3_t&>(m);
+}
+
 } // namespace vml

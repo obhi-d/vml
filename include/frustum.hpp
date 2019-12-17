@@ -56,11 +56,13 @@ struct frustum_t {
 	frustum_t(plane_t const* i_planes, std::uint32_t i_size)
 	    : plane_count(i_size), pplanes(nullptr) {
 		if (plane_count <= k_fixed_plane_count && plane_count > 0) {
+			if (!i_planes) return;
 			for (std::uint32_t i = 0; i < plane_count; ++i)
 				planes[i] = i_planes[i];
 		} else if (plane_count) {
 			pplanes = vml::allocate<vml::plane_t>(sizeof(vml::plane_t) * plane_count,
 			                                      alignof(vml::plane_t));
+			if (!i_planes) return;
 			for (std::uint32_t i = 0; i < plane_count; ++i)
 				pplanes[i] = i_planes[i];
 		}
