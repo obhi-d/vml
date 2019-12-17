@@ -335,14 +335,14 @@ inline void mat4::transform_and_project(pref m, const vec3::type* inpstream,
 	quad_t x, y, z, r;
 
 	for (std::uint32_t i = 0; i < count; i++) {
-		x = vec3a::set(((float*)inp_vec)[0]);
-		y = vec3a::set(((float*)inp_vec)[1]);
-		z = vec3a::set(((float*)inp_vec)[2]);
+		x = vec4::set(((float*)inp_vec)[0]);
+		y = vec4::set(((float*)inp_vec)[1]);
+		z = vec4::set(((float*)inp_vec)[2]);
 
-		r = vec3a::madd(z, row(m, 2), row(m, 3));
-		r = vec3a::madd(y, row(m, 1), r);
-		r = vec3a::madd(x, row(m, 0), r);
-		r = vec3a::mul(r, 1.f / r[3]);
+		r = vec4::madd(z, row(m, 2), row(m, 3));
+		r = vec4::madd(y, row(m, 1), r);
+		r = vec4::madd(x, row(m, 0), r);
+		r = vec4::mul(r, 1.f / r[3]);
 
 		((float*)out_vec)[0] = r[0];
 		((float*)out_vec)[1] = r[1];

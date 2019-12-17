@@ -122,7 +122,7 @@ TEST_CASE("Validate mat4::transform_aabb", "[mat4::transform_aabb]") {
 	    vml::aabb::set(vml::vec3a::zero(), vml::vec3a::set(4, 2, 2));
 	vml::mat4_t scale  = vml::mat4::from_scale(vml::vec3a::set(2, 2, 2));
 	vml::mat4_t rotate = vml::mat4::from_rotation(vml::quat::from_axis_angle(
-	    vml::axis_angle::set(0, 0, 1, vml::to_radians(90.0))));
+	    vml::axis_angle::set_assume_normalized(vml::vec3a::set(0, 0, 1), vml::to_radians(90.0))));
 	vml::mat4_t translate =
 	    vml::mat4::from_translation(vml::vec3a::set(10, 0, 0));
 	vml::mat4_t combined =

@@ -27,7 +27,6 @@ struct quat : public quad {
 	static inline vec3a_t transform_bounds_extends(pref q1,
 	                                               vec3a_t const& extends);
 	static inline type slerp(pref q1, pref q2, scalar_type t);
-	static inline type lerp(pref q1, pref q2, scalar_type t);
 	static inline type inverse(pref q);
 };
 
@@ -172,49 +171,44 @@ inline quat::type quat::mul(pref q1, pref q2) {
 	e = _mm_pshufd(e, _MM_SHUFFLE(2, 3, 1, 0)); /* 1, 0.5 */
 	return e;
 #else
+#define _mm_pshufd(r, i)                                                       \
+	vml_cast_i_to_v(_mm_shuffle_epi32(vml_cast_v_to_i(r), i))
+
 	// Copy to SSE registers and use as few as possible for x86
-	type Q2X     = q2;
-	type Q2Y     = q2;
-	type Q2Z     = q2;
-	type vResult = q2;
-	// Splat with one instruction
-	vResult = _mm_shuffle_ps(vResult, vResult, _MM_SHUFFLE(3, 3, 3, 3));
-	Q2X     = _mm_shuffle_ps(Q2X, Q2X, _MM_SHUFFLE(0, 0, 0, 0));
-	Q2Y     = _mm_shuffle_ps(Q2Y, Q2Y, _MM_SHUFFLE(1, 1, 1, 1));
-	Q2Z     = _mm_shuffle_ps(Q2Z, Q2Z, _MM_SHUFFLE(2, 2, 2, 2));
-	// Retire q1 and perform q1*Q2W
-	vResult        = _mm_mul_ps(vResult, q1);
-	type Q1Shuffle = q1;
-	// Shuffle the copies of q1
-	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(0, 1, 2, 3));
-	// mul by Q1WZYX
-	Q2X       = _mm_mul_ps(Q2X, Q1Shuffle);
-	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(2, 3, 0, 1));
-	// Flip the signs on y and z
-	Q2X = _mm_xor_ps(Q2X, vml_cast_i_to_v(_mm_set_epi32(0x80000000, 0x00000000,
-	                                                    0x80000000, 0x00000000)));
-	// mul by Q1ZWXY
-	Q2Y       = _mm_mul_ps(Q2Y, Q1Shuffle);
-	Q1Shuffle = _mm_shuffle_ps(Q1Shuffle, Q1Shuffle, _MM_SHUFFLE(0, 1, 2, 3));
-	// Flip the signs on z and w
-	Q2Y = _mm_xor_ps(Q2Y, (vml_cast_i_to_v(_mm_set_epi32(
-	                          0x80000000, 0x80000000, 0x00000000, 0x00000000))));
-	// mul by Q1YXWZ
-	Q2Z     = _mm_mul_ps(Q2Z, Q1Shuffle);
-	vResult = _mm_add_ps(vResult, Q2X);
-	// Flip the signs on x and w
-	Q2Z     = _mm_xor_ps(Q2Z, (vml_cast_i_to_v(_mm_set_epi32(
-                            0x80000000, 0x00000000, 0x00000000, 0x80000000))));
-	Q2Y     = _mm_add_ps(Q2Y, Q2Z);
-	vResult = _mm_add_ps(vResult, Q2Y);
-	return vResult;
+	__m128 result;
+	{
+		result = vml::quad::mul(vml::quad::splat_w(q2), q1);
+	}
+	{
+		const __m128i k_sign =	_mm_set_epi32(0x80000000, 0x80000000, 0x00000000, 0x00000000);
+		__m128 t = _mm_pshufd(q1, _MM_SHUFFLE(0, 1, 2, 3));
+		t = vml::quad::mul(vml::quad::splat_x(q2), t);
+		t = _mm_xor_ps(t, vml_cast_i_to_v(k_sign));
+		result = vml::quad::add(t, result);
+	}
+	{
+		const __m128i k_sign =	_mm_set_epi32(0x80000000, 0x00000000, 0x00000000, 0x80000000);
+		__m128 t = _mm_pshufd(q1, _MM_SHUFFLE(1, 0, 3, 2));
+		t = vml::quad::mul(vml::quad::splat_y(q2), t);
+		t = _mm_xor_ps(t, vml_cast_i_to_v(k_sign));
+		result = vml::quad::add(t, result);
+	}
+	{
+		const __m128i k_sign =	_mm_set_epi32(0x80000000, 0x00000000, 0x80000000, 0x00000000);
+		__m128 t = _mm_pshufd(q1, _MM_SHUFFLE(2, 3, 0, 1));
+		t = vml::quad::mul(vml::quad::splat_z(q2), t);
+		t = _mm_xor_ps(t, vml_cast_i_to_v(k_sign));
+		result = vml::quad::add(t, result);
+	}
+	return result;
 #endif
 #else
 	return set(
-	    (q2[3] * q1[0]) + (q2[0] * q1[3]) + (q2[1] * q1[2]) - (q2[2] * q1[1]),
-	    (q2[3] * q1[1]) - (q2[0] * q1[2]) + (q2[1] * q1[3]) + (q2[2] * q1[0]),
-	    (q2[3] * q1[2]) + (q2[0] * q1[1]) - (q2[1] * q1[0]) + (q2[2] * q1[3]),
-	    (q2[3] * q1[3]) - (q2[0] * q1[0]) - (q2[1] * q1[1]) - (q2[2] * q1[2]));
+	    (q2[3] * q1[0]) + (q2[0] * q1[3]) - (q2[1] * q1[2]) + (q2[2] * q1[1]),
+	    (q2[3] * q1[1]) + (q2[0] * q1[2]) + (q2[1] * q1[3]) - (q2[2] * q1[0]),
+	    (q2[3] * q1[2]) - (q2[0] * q1[1]) + (q2[1] * q1[0]) + (q2[2] * q1[3]),
+		(q2[3] * q1[3]) - (q2[0] * q1[0]) - (q2[1] * q1[1]) - (q2[2] * q1[2])
+		);
 #endif
 }
 inline vec3a_t quat::transform(pref q, vec3a_t const& v) {
@@ -321,14 +315,7 @@ inline quat::type quat::slerp(pref from, pref to, scalar_type t) {
 	return quad::add(quad::mul(from, scale0), quad::mul(to, scale1));
 }
 inline quat::type quat::inverse(pref q) {
-#if VML_USE_SSE_AVX
-	return _mm_xor_ps(q, (vml_cast_i_to_v(_mm_set_epi32(
-	                         0x00000000, 0x80000000, 0x80000000, 0x80000000))));
-#else
-	return set(-q[0], -q[1], -q[2], q[3]);
-#endif
+	return conjugate(q);
 }
-inline quat::type quat::lerp(pref q1, pref q2, scalar_type t) {
-	return quad::normalize(quad::lerp(q1, q2, t));
-}
+
 } // namespace vml

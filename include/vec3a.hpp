@@ -11,7 +11,9 @@ struct vec3a : public quad {
 	using quad::type;
 
 	using quad::mul;
+	using quad::set;
 
+	static inline type set(scalar_type p);
 	static inline type from_vec4(vec4_t p);
 	static inline type normalize(pref p);
 	static inline scalar_type dot(pref q1, pref q2);
@@ -24,6 +26,7 @@ struct vec3a : public quad {
 	static inline type mul(pref q1, mat4_t const& m);
 };
 
+inline vec3a_t vec3a::set(scalar_type p) { return quad::set(p, p, p, 0.0f); }
 inline vec3a::type vec3a::from_vec4(vec4_t p) {
 #if VML_USE_SSE_AVX
 	return _mm_and_ps(p, VML_CLEAR_W_VEC);
@@ -40,13 +43,13 @@ inline vec3a::type vml::vec3a::normalize(pref vec) {
 	q = _mm_sqrt_ps(q);
 	return _mm_div_ps(vec, q);
 #elif VML_USE_SSE_LEVEL >= 3
-	__m128 v = _mm_mul_ps(vec, vec);
+	__m128 v    = _mm_mul_ps(vec, vec);
 	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
 	__m128 sums = _mm_add_ps(v, shuf);
 	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
 	sums        = _mm_add_ss(sums, shuf);
-	sums 		= _mm_sqrt_ss(sums);
-	sums 		= _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
+	sums        = _mm_sqrt_ss(sums);
+	sums        = _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(0, 0, 0, 0));
 	return _mm_div_ps(vec, sums);
 #else
 	// Perform the dot product
@@ -149,9 +152,21 @@ inline bool vec3a::greater_any(pref q1, pref q2) {
 #endif
 }
 
-inline bool vec3a::lesser_all(pref q1, pref q2) { return greater_any(q2, q1); }
+inline bool vec3a::lesser_all(pref a, pref b) {
+#if VML_USE_SSE_AVX
+	return ((_mm_movemask_ps(_mm_cmplt_ps(a, b)) & 0x7) == 0x7);
+#else
+	return a[0] < b[0] && a[1] < b[1] && a[2] < b[2];
+#endif
+}
 
-inline bool vec3a::lesser_any(pref q1, pref q2) { return greater_all(q2, q1); }
+inline bool vec3a::lesser_any(pref a, pref b) {
+#if VML_USE_SSE_AVX
+	return (_mm_movemask_ps(_mm_cmplt_ps(a, b)) & 0x7) != 0;
+#else
+	return a[0] < b[0] || a[1] < b[1] || a[2] < b[2];
+#endif
+}
 
 inline vec3a::type vec3a::mul(pref v, mat4_t const& m) {
 #if VML_USE_SSE_AVX
@@ -165,7 +180,7 @@ inline vec3a::type vec3a::mul(pref v, mat4_t const& m) {
 	v_temp      = _mm_mul_ps(v_temp, m.r[2]);
 	ret         = _mm_add_ps(ret, v_temp);
 	ret         = _mm_add_ps(ret, m.r[3]);
-	return ret;
+	return from_vec4(ret);
 #else
 	type r, x, y, z;
 
@@ -177,7 +192,7 @@ inline vec3a::type vec3a::mul(pref v, mat4_t const& m) {
 	r = madd(y, m.r[1], r);
 	r = madd(x, m.r[0], r);
 
-	return r;
+	return from_vec4(r);
 #endif
 }
 } // namespace vml

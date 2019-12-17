@@ -23,11 +23,22 @@ TEST_CASE("Validate intersect::bounding_volume_frustum_coherent",
 
 	vml::frustum_t custom = vml::frustum::from_planes(
 	    nullptr, static_cast<std::uint32_t>(custom_planes.size()));
+	vml::frustum_t  unused = vml::frustum::from_planes(
+	    custom_planes.data(), 6);
+
+	vml::frustum_t unused_copy(unused);
+	CHECK(vml::frustum::count(unused_copy) == 6);
+
+	vml::mat4_t tm = vml::mat4::transpose(m);
+	vml::mat4::transpose_in_place(m);
+	CHECK(vml::mat4::equals(m, tm));
+	
+	vml::frustum::set(unused, m);
 	std::uint32_t idx = 0;
 	for(auto& p : custom_planes)
 		vml::frustum::set_plane(custom, idx++, p);
 
-	vml::frustum_t copy;
+	vml::frustum_t copy(custom);
 	copy = custom;
 	vml::frustum_t inter(std::move(copy));
 	custom = std::move(inter);

@@ -1,5 +1,5 @@
 # Working workflow
-rm -f `pwd`/build/coverage/*.*
+rm -rf `pwd`/build/coverage/*
 LLVM_PROFILE_FILE="`pwd`/build/coverage/vmltest-validity-avx.profraw" `pwd`/build/unit_tests/vmltest-validity-avx
 LLVM_PROFILE_FILE="`pwd`/build/coverage/vmltest-validity-sse.profraw" `pwd`/build/unit_tests/vmltest-validity-sse
 LLVM_PROFILE_FILE="`pwd`/build/coverage/vmltest-validity-sse3.profraw" `pwd`/build/unit_tests/vmltest-validity-sse3

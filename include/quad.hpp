@@ -771,12 +771,12 @@ inline quad::type quad::set_000w(pref a, std::uint8_t select) {
 #if VML_USE_SSE_AVX	
 	switch (select) {
 	case 0: 
-		 return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 0, 0, 3)), VML_CLEAR_XYZ_VEC);
+		 return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 0)), VML_CLEAR_XYZ_VEC);
 	case 1:
 		return _mm_and_ps(_mm_movelh_ps(a, a),
 		                  VML_CLEAR_XYZ_VEC);
 	case 2:
-		return _mm_and_ps(_mm_movehl_ps(a, a), VML_CLEAR_XYZ_VEC);
+		return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 2, 1, 0)), VML_CLEAR_XYZ_VEC);
 	case 3:
 		return _mm_and_ps(a, VML_CLEAR_XYZ_VEC);
 	}

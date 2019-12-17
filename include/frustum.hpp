@@ -165,7 +165,7 @@ struct frustum {
 	using plane_type = frustum_t::plane_type;
 
 	static inline std::uint32_t count(frustum_t const& _) { return _.count(); }
-	static inline coherency default_coherency(std::uint32_t plane_count) { return coherency(); }
+	static inline coherency default_coherency(std::uint32_t plane_count) { return coherency(plane_count); }
 	static inline frustum_t from_planes(plane_t const* i_planes,
 	                                    std::uint32_t i_size) {
 		return frustum_t(i_planes, i_size);
