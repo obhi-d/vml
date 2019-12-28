@@ -302,7 +302,6 @@ inline bool almost_equals_rel_or_abs(float i_a, float i_b,
 	float diff = fabs(i_a - i_b);
 	if (diff < max_diff)
 		return true;
-	float relativeError;
 	i_a = fabs(i_a);
 	i_b = fabs(i_b);
 	float largest = i_b > i_a ? i_b : i_a;

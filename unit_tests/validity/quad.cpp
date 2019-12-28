@@ -24,9 +24,9 @@ TEST_CASE("Validate quad::isgreater_x", "[quad::isgreater_x]") {
 	vml::quad_t p = vml::quad::set(-441.3f, 1.0f, -1.0f, 10.0f);
     vml::quad_t q = vml::quad::set(reinterpret_cast<float const*>(&p));
 	CHECK(vml::quad::isgreater_x(p, q) == false);
-    q = vml::quad::set(441.3, 1.0f, -1.0f, 10.0f);
+    q = vml::quad::set(441.3f, 1.0f, -1.0f, 10.0f);
     CHECK(vml::quad::isgreater_x(p, q) == false);
-    q = vml::quad::set(-1441.3, 1.0f, -1.0f, 10.0f);
+    q = vml::quad::set(-1441.3f, 1.0f, -1.0f, 10.0f);
     CHECK(vml::quad::isgreater_x(p, q) == true);
 }
 

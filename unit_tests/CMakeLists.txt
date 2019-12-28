@@ -3,18 +3,6 @@ project(cpphash_general_tests)
   
 include(ExternalProject)
 
-ExternalProject_Add(benchmark
-#  GIT_REPOSITORY https://github.com/google/benchmark.git
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/benchmark"
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/benchmark
-	STEP_TARGETS install 
-  CMAKE_ARGS 
-  	-DCMAKE_INSTALL_PREFIX=${CMAKE_SOURCE_DIR}/out/external/install
-		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-		-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}
-		-DBENCHMARK_ENABLE_GTEST_TESTS=OFF
-)
-
 ExternalProject_Add(Catch2
 #  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/Catch2"
