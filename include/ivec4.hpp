@@ -16,5 +16,5 @@ struct ivec4_traits {
 	enum { element_count = 4 };
 };
 } // namespace detail
-struct ivec4 : public vec_base<detail::ivec3_traits> {};
+struct ivec4 : public vec_base<detail::ivec4_traits> {};
 } // namespace vml
