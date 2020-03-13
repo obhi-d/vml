@@ -2,6 +2,8 @@
 #include <vml.hpp>
 
 TEST_CASE("Validate aabb::is_valid", "[aabb::is_valid]") {
+	REQUIRE(vml::rect::get(vml::rect::set(12.0f, 4.0f, 4.0f, 1.0f), 0, 0) ==
+	        12.0f);
 
 	REQUIRE(vml::aabb::is_valid(
 	            vml::aabb::set(vml::vec3a::set(1.0f, 2.0f, 3.0f),
@@ -33,7 +35,6 @@ TEST_CASE("Validate aabb::is_valid", "[aabb::is_valid]") {
 }
 
 TEST_CASE("Validate aabb::center", "[aabb::center]") {
-
 	REQUIRE(vml::vec3a::x(vml::aabb::center(
 	            vml::aabb::set(vml::vec3a::set(1.0f, 2.0f, 3.0f),
 	                           vml::vec3a::set(5.0f, 15.0f, 13.0f)))) == 1.0f);
@@ -49,7 +50,6 @@ TEST_CASE("Validate aabb::center", "[aabb::center]") {
 }
 
 TEST_CASE("Validate aabb::size", "[aabb::size]") {
-
 	REQUIRE(vml::vec3a::x(vml::aabb::size(
 	            vml::aabb::set(vml::vec3a::set(1.0f, 2.0f, 3.0f),
 	                           vml::vec3a::set(5.0f, 15.0f, 13.0f)))) == 10.0f);
@@ -65,7 +65,6 @@ TEST_CASE("Validate aabb::size", "[aabb::size]") {
 }
 
 TEST_CASE("Validate aabb::half_size", "[aabb::half_size]") {
-
 	REQUIRE(vml::vec3a::x(vml::aabb::half_size(
 	            vml::aabb::set(vml::vec3a::set(1.0f, 2.0f, 3.0f),
 	                           vml::vec3a::set(5.0f, 15.0f, 13.0f)))) == 5.0f);
@@ -81,7 +80,6 @@ TEST_CASE("Validate aabb::half_size", "[aabb::half_size]") {
 }
 
 TEST_CASE("Validate aabb::corner", "[aabb::corner]") {
-
 	REQUIRE(vml::vec3a::x(vml::aabb::corner(
 	            vml::aabb::set(vml::vec3a::set(1.0f, 2.0f, 3.0f),
 	                           vml::vec3a::set(5.0f, 15.0f, 13.0f)),
@@ -220,7 +218,6 @@ TEST_CASE("Validate aabb::corner", "[aabb::corner]") {
 }
 
 TEST_CASE("Validate aabb::append", "[aabb::append]") {
-
 	vml::aabb_t aabb1 = vml::aabb::set(vml::vec3a::set(1.0f, 2.0f, 3.0f),
 	                                   vml::vec3a::set(5.0f, 15.0f, 13.0f));
 	vml::aabb_t aabb2 = vml::aabb::set(vml::vec3a::set(0.0f, 0.0f, -9.0f),

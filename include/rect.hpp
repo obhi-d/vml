@@ -3,10 +3,8 @@
 #include "vec2.hpp"
 
 namespace vml {
-
 namespace detail {
 struct rect_traits {
-
 	using type     = types::rect_t<float>;
 	using ref      = type&;
 	using pref     = std::conditional_t<types::is_pref_cref, type const&, type>;
@@ -29,7 +27,7 @@ template <typename traits> struct rect_base : public multi_dim<traits> {
 
 	static inline type set(scalar_type left, scalar_type top, scalar_type right,
 	                       scalar_type bottom) {
-		return {{left, top}, {right, bottom}};
+		return {row_type{left, top}, row_type{right, bottom}};
 	}
 	static inline row_type half_size(pref box) {
 		return row_tag::half(row_tag::sub(box[1], box[0]));
@@ -39,9 +37,11 @@ template <typename traits> struct rect_base : public multi_dim<traits> {
 		return row_tag::half(row_tag::add(box[1], box[0]));
 	}
 };
-
 } // namespace detail
 
-struct rect : public detail::rect_base<detail::rect_traits> {};
-
+struct rect : public detail::rect_base<detail::rect_traits> {
+	template <typename... Args>
+	rect(Args&&... args)
+	    : detail::rect_base<detail::rect_traits>(std::forward<Args>(args)...) {}
+};
 } // namespace vml
