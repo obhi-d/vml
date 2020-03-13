@@ -29,7 +29,7 @@ TEST_CASE("Validate vec3a::compare", "[vec3a::compare]") {
 }
 
 TEST_CASE("Validate vec4::mul", "[vec4::mul]") {
-    vml::mat4_t m = {
+  vml::mat4_t m = {
 	    0.0f,   0.80f, 0.60f,  0.0f, -0.80f, -0.36f, 0.48f, 0.0f,
 	    -0.60f, 0.48f, -0.64f, 0.0f, 0.0f,   0.0f,   0.0f,  1.0f,
 	};

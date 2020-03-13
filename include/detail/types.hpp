@@ -26,6 +26,10 @@ struct rect_t {
     std::array<vec2_t<scalar_t>, 2> m;
     scalar_t e[2][2];
   };
+
+	rect_t(){};
+	template <typename... RowType>
+	rect_t(RowType... args) : m{args...} {}
 };
 
 template <typename scalar_t> struct aabb_t {
@@ -34,6 +38,9 @@ template <typename scalar_t> struct aabb_t {
     std::array<vec3a_t<scalar_t>, 2> m;
     scalar_t e[2][4];
   };
+	aabb_t(){};
+	template <typename... RowType>
+	aabb_t(RowType... args) : m{args...} {}
 };
 
 template <typename scalar_t>
