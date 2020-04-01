@@ -8,6 +8,7 @@ option(VML_USE_SSE_AVX "Use SSE and AVX instructions" ON)
 option(VML_USE_SSE_LEVEL_4 "SSE instruction level" OFF)
 option(VML_USE_SSE_LEVEL_2 "SSE instruction level 2" OFF)
 option(VML_PREFER_SPEED_OVER_ACCURACY "Prefer speed over accuracy" ON)
+option(VML_BUILD_DOCS "Build documentation" ON)
 ##
 ## CONFIGURATION
 ##
@@ -95,5 +96,32 @@ if(DEFINED CMAKE_INSTALL_DATAROOTDIR)
                 "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
 endif()
+
+find_package(Doxygen)
+if (VML_BUILD_DOCS)
+if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
+    # build the docs
+
+  if (DOXYGEN_FOUND)
+      # set input and output files
+      set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxygen.in)
+      set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+      # request to configure the file
+      configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+      message("Doxygen build started")
+
+      # note the option ALL which allows to build the docs together with the application
+      add_custom_target( Documentation ALL
+          COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+          COMMENT "Generating API documentation with Doxygen"
+          VERBATIM )
+  else (DOXYGEN_FOUND)
+    message("Doxygen need to be installed to generate the doxygen documentation")
+  endif (DOXYGEN_FOUND)
+
+endif()
+endif(VML_BUILD_DOCS)
 
 install(DIRECTORY include DESTINATION .)

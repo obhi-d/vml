@@ -21,8 +21,10 @@ struct bounds_info {
 			if (_.radius <= 0)
 				_ = info;
 			else {
-				vec3_t min_p = vec3::min(vec3::sub(_.center, _.half_extends), vec3::sub(info.center, info.half_extends));
-				vec3_t max_p = vec3::max(vec3::add(_.center, _.half_extends), vec3::add(info.center, info.half_extends));
+				vec3_t min_p   = vec3::min(vec3::sub(_.center, _.half_extends),
+                                 vec3::sub(info.center, info.half_extends));
+				vec3_t max_p   = vec3::max(vec3::add(_.center, _.half_extends),
+                                 vec3::add(info.center, info.half_extends));
 				vec3_t a       = vec3::abs(vec3::sub(_.center, info.center));
 				_.center       = vec3::half(vec3::add(min_p, max_p));
 				_.half_extends = vec3::half(vec3::sub(max_p, min_p));
@@ -69,12 +71,20 @@ struct bounding_volume {
 	inline static type set(vec3a_t const& center, vec3a_t const& half_extends,
 	                       float radius);
 	inline static type set(sphere_t const& sphere, vec3a_t const& half_extends);
+	//! Given a matrix, update the bounding volume using the original extends and
+	//! radius
 	inline static void update(bounding_volume_t& _, mat4::pref m);
+	//! Given a scale, rotation and translation, update the bounding volume using
+	//! the original extends and radius
 	inline static void update(bounding_volume_t& _, float scale, quat::pref rot,
 	                          vec3a::pref translation);
+	//! Given a transform, rotation and translation, update the bounding volume
+	//! using the original extends and radius
 	inline static void update(bounding_volume_t& _, transform_t const& tf);
+	//! Compute the bounding volume from a set of points
 	inline static void update(bounding_volume_t& _, vec3a_t const* points,
 	                          std::uint32_t count);
+	//! Compute the bounding volume by appending another bounding volume to it
 	inline static void update(bounding_volume_t& _, bounding_volume_t const&);
 };
 
@@ -145,8 +155,8 @@ inline void bounding_volume::update(bounding_volume_t& _, float scale,
 	                   translation),
 	        sphere::radius(_.spherical_vol)),
 	    scale);
-	_.half_extends =
-	    quat::transform_bounds_extends(rot, vec3a::mul(_.orig_half_extends, scale));
+	_.half_extends = quat::transform_bounds_extends(
+	    rot, vec3a::mul(_.orig_half_extends, scale));
 }
 
 inline void bounding_volume::update(bounding_volume_t& _,
@@ -168,15 +178,18 @@ inline void bounding_volume::update(bounding_volume_t& _,
 	vec3a_t center_this  = center(_);
 	vec3a_t center_other = center(vol);
 
-	vec3a_t a = vec3a::abs(vec3a::sub(center_this, center_other));
-	vec3a_t min_p = vec3a::min(vec3a::sub(center_this, _.half_extends), vec3a::sub(center_other, vol.half_extends));
-	vec3a_t max_p = vec3a::max(vec3a::add(center_this, _.half_extends), vec3a::add(center_other, vol.half_extends));
+	vec3a_t a      = vec3a::abs(vec3a::sub(center_this, center_other));
+	vec3a_t min_p  = vec3a::min(vec3a::sub(center_this, _.half_extends),
+                             vec3a::sub(center_other, vol.half_extends));
+	vec3a_t max_p  = vec3a::max(vec3a::add(center_this, _.half_extends),
+                             vec3a::add(center_other, vol.half_extends));
 	_.half_extends = vec3a::half(vec3a::sub(max_p, min_p));
-	_.spherical_vol = vec3a::set_w(
-	    vec3a::half(vec3a::add(min_p, max_p)),
-	    vec3a::half_x(vec3a::add_x(vec3a::add_x(sphere::vradius(vol.spherical_vol),
-	                                      sphere::vradius(_.spherical_vol)),
-	                         vec3a::sqrt_x(vec3a::vdot(a, a)))));
+	_.spherical_vol =
+	    vec3a::set_w(vec3a::half(vec3a::add(min_p, max_p)),
+	                 vec3a::half_x(vec3a::add_x(
+	                     vec3a::add_x(sphere::vradius(vol.spherical_vol),
+	                                  sphere::vradius(_.spherical_vol)),
+	                     vec3a::sqrt_x(vec3a::vdot(a, a)))));
 	_.orig_spherical_vol = _.spherical_vol;
 	_.orig_half_extends  = _.half_extends;
 }

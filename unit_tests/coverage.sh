@@ -9,4 +9,4 @@ llvm-cov show `pwd`/build/unit_tests/vmltest-validity-sse3 -instr-profile=`pwd`/
 llvm-cov export `pwd`/build/unit_tests/vmltest-validity-sse3 -instr-profile=`pwd`/build/coverage/code.profdata `pwd`/include/*.* -path-equivalence -use-color --format lcov > `pwd`/build/coverage/coverage.lcov
 
 genhtml --prefix `pwd`/build/unit_tests/vmltest-validity-avx --ignore-errors source `pwd`/build/coverage/coverage.lcov \
---legend --title "commit SHA1" --output-directory=`pwd`/build/coverage
+--legend --title "Coverage" --output-directory=`pwd`/build/coverage

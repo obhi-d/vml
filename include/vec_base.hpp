@@ -15,35 +15,65 @@ template <typename concrete> struct vec_base : public concrete {
 	using scalar_type = typename concrete::scalar_type;
 	using row_type    = typename concrete::row_type;
 	enum { element_count = concrete::element_count };
-
+	//! Check if two vectors are equal
 	static inline bool equals(pref v1, pref v2);
+	//! Check if any element of a vector is NAN
 	static inline bool isnan(pref v);
+	//! Check if any element of a vector is INF
 	static inline bool isinf(pref v);
+	//! Check if any element of a vector is NAN, and return a vector of integers
+	//! indicating which element is NAN (1) and which is not (0)
 	static inline type isnanv(pref v);
+	//! Check if any element of a vector is NAN, and return a vector of integers
+	//! indicating which element is NAN (1) and which is not (0)
 	static inline type isinfv(pref v);
+	//! Set v to all elements of vector
 	static inline type set(scalar_type v);
+	//! Set x and y for a vector
 	static inline type set(scalar_type x, scalar_type y);
+	//! Set x, y and z for a vector
 	static inline type set(scalar_type x, scalar_type y, scalar_type z);
+	//! Set x, y, z, w for a vector
 	static inline type set(scalar_type x, scalar_type y, scalar_type z,
 	                       scalar_type w);
+	//! Set a vector using a floating point arry
 	static inline type set(scalar_type const* v);
+	//! Set a vector using a floating point arry
 	static inline type set_unaligned(scalar_type const* v);
+	//! Set x element for a vector v
 	static inline type x(pref v, scalar_type x);
+	//! Set y element for a vector v
 	static inline type y(pref v, scalar_type y);
+	//! Set z element for a vector v
 	static inline type z(pref v, scalar_type z);
+	//! Set w element for a vector v
 	static inline type w(pref v, scalar_type w);
+	//! Get x element for a vector v
 	static inline scalar_type x(pref v);
+	//! Get y element for a vector v
 	static inline scalar_type y(pref v);
+	//! Get z element for a vector v
 	static inline scalar_type z(pref v);
+	//! Get w element for a vector v
 	static inline scalar_type w(pref v);
+	//! Get a vector with all elements set to 0
 	static inline type zero();
+	//! Repeat the x element of vector v and return a new vector
 	static inline type splat_x(pref v);
+	//! Repeat the y element of vector v and return a new vector
 	static inline type splat_y(pref v);
+	//! Repeat the z element of vector v and return a new vector
 	static inline type splat_z(pref v);
+	//! Repeat the w element of vector v and return a new vector
 	static inline type splat_w(pref v);
+	//! Select elements of vector from v1 and v2 using control, similar to
+	//! _MM_SHUFFLE
 	static inline type select(pref v1, pref v2, pref control);
+	//! Get i'th element of a vector
 	static inline scalar_type get(pref v, std::uint32_t i);
+	//! Get absolute value of vector v
 	static inline type abs(pref v);
+	//! Negate vector v and return the result
 	static inline type negate(pref v);
 	static inline type add(pref a, pref b);
 	static inline type sub(pref a, pref b);
@@ -405,14 +435,16 @@ inline typename vec_base<concrete>::scalar_type vec_base<concrete>::hadd(
 	}
 }
 template <typename concrete>
-inline typename vec_base<concrete>::type vec_base<concrete>::min(pref q1, pref q2) {
+inline typename vec_base<concrete>::type vec_base<concrete>::min(pref q1,
+                                                                 pref q2) {
 	typename vec_base<concrete>::type r;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		r[i] = std::min(q1[i], q2[i]);
 	return r;
 }
 template <typename concrete>
-inline typename vec_base<concrete>::type vec_base<concrete>::max(pref q1, pref q2) {
+inline typename vec_base<concrete>::type vec_base<concrete>::max(pref q1,
+                                                                 pref q2) {
 	typename vec_base<concrete>::type r;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		r[i] = std::max(q1[i], q2[i]);
