@@ -103,18 +103,31 @@ template <typename concrete> struct vec_base : public concrete {
 
 template <typename concrete>
 inline bool vec_base<concrete>::equals(pref v1, pref v2) {
-	for (std::uint32_t i = 0; i < element_count; ++i)
-		if (!real::equals(v1[i], v2[i]))
-			return false;
+	for (std::uint32_t i = 0; i < element_count; ++i) {
+		if constexpr (std::is_same_v<float, scalar_type>) {
+			if (!real::equals(v1[i], v2[i]))
+				return false;
+		} else {
+			if (v1[i] != v2[i])
+				return false;
+		}
+	}
+
 	return true;
 }
 template <typename concrete> inline bool vec_base<concrete>::isnan(pref v) {
+	if constexpr (!std::is_same_v<float, scalar_type>)
+		return false;
+
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		if (!real::isnan(v[i]))
 			return true;
 	return false;
 }
 template <typename concrete> inline bool vec_base<concrete>::isinf(pref v) {
+	if constexpr (!std::is_same_v<float, scalar_type>)
+		return false;
+
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		if (!real::isinf(v[i]))
 			return true;
@@ -129,6 +142,9 @@ inline typename vec_base<concrete>::type vec_base<concrete>::isnanv(pref v) {
 }
 template <typename concrete>
 inline typename vec_base<concrete>::type vec_base<concrete>::isinfv(pref v) {
+	if constexpr (!std::is_same_v<float, scalar_type>)
+		return false;
+
 	type ret;
 	for (std::uint32_t i = 0; i < element_count; ++i)
 		ret[i] = (scalar_type)real::isinf(v[i]);

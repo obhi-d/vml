@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <type_traits>
 
 namespace vml {
 
@@ -19,60 +20,55 @@ template <typename scalar_t> using axis_angle_t   = quad_t<scalar_t>;
 template <typename scalar_t> using polar_coord_t  = vec2_t<scalar_t>;
 template <typename scalar_t> using euler_angles_t = vec3_t<scalar_t>;
 
-template <typename scalar_t> 
-struct rect_t {
-  union {
-    vec2_t<scalar_t> r[2];
-    std::array<vec2_t<scalar_t>, 2> m;
-    scalar_t e[2][2];
-  };
+template <typename scalar_t> struct rect_t {
+	union {
+		vec2_t<scalar_t> r[2];
+		std::array<vec2_t<scalar_t>, 2> m;
+		scalar_t e[2][2];
+	};
 
 	rect_t(){};
-	template <typename... RowType>
-	rect_t(RowType... args) : m{args...} {}
+	template <typename... RowType> rect_t(RowType... args) : m{args...} {}
 };
 
 template <typename scalar_t> struct aabb_t {
-  union {
-    vec3a_t<scalar_t> r[2];
-    std::array<vec3a_t<scalar_t>, 2> m;
-    scalar_t e[2][4];
-  };
+	union {
+		vec3a_t<scalar_t> r[2];
+		std::array<vec3a_t<scalar_t>, 2> m;
+		scalar_t e[2][4];
+	};
 	aabb_t(){};
-	template <typename... RowType>
-	aabb_t(RowType... args) : m{args...} {}
+	template <typename... RowType> aabb_t(RowType... args) : m{args...} {}
 };
 
-template <typename scalar_t>
-struct mat4_t {
-  //! @note This is possibly non isoc++, but knowing it will work for all compilers
-  //! is why I am putting it here
-  union {
-    vec4_t<scalar_t> r[4];
-    std::array<scalar_t, 16> m;
-    scalar_t e[4][4];
-  };
+template <typename scalar_t> struct mat4_t {
+	//! @note This is possibly non isoc++, but knowing it will work for all
+	//! compilers is why I am putting it here
+	union {
+		vec4_t<scalar_t> r[4];
+		std::array<scalar_t, 16> m;
+		scalar_t e[4][4];
+	};
 
-  mat4_t() {};
-  template <typename ...ScalarType>
-  mat4_t(ScalarType...args) : m{static_cast<scalar_t>(args)...} {}
+	mat4_t(){};
+	template <typename... ScalarType>
+	mat4_t(ScalarType... args) : m{static_cast<scalar_t>(args)...} {}
 };
 
-template <typename scalar_t>
-struct mat3_t {
-  //! @note This is possibly non isoc++, but knowing it will work for all compilers
-  //! is why I am putting it here
-  union {
-    vec4_t<scalar_t> r[3];
-    std::array<scalar_t, 12> m;
-    scalar_t e[3][4];
-  };
-  mat3_t() {};
-  template <typename ...ScalarType>
-  mat3_t(ScalarType...args) : m{static_cast<scalar_t>(args)...} {}
+template <typename scalar_t> struct mat3_t {
+	//! @note This is possibly non isoc++, but knowing it will work for all
+	//! compilers is why I am putting it here
+	union {
+		vec4_t<scalar_t> r[3];
+		std::array<scalar_t, 12> m;
+		scalar_t e[3][4];
+	};
+	mat3_t(){};
+	template <typename... ScalarType>
+	mat3_t(ScalarType... args) : m{static_cast<scalar_t>(args)...} {}
 };
 
 bool constexpr is_pref_cref = false;
 
-} // namespace types
+} // namespace fallback_types
 } // namespace vml
