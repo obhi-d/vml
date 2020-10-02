@@ -11,11 +11,11 @@ struct aabb_traits {
 	using cref = type const&;
 	using scalar_type = float;
 	using row_type    = types::vec3a_t<scalar_type>;
-	using row_tag = vec3a;
+	using row_tag     = vec3a;
 
-	enum { element_count = 8 };
-	enum { row_count = 2 };
-	enum { column_count = 4 };
+	enum : unsigned int { element_count = 8 };
+	enum : unsigned int { row_count = 2 };
+	enum : unsigned int { column_count = 4 };
 };
 } // namespace detail
 
@@ -34,7 +34,7 @@ struct aabb : public mat_base<detail::aabb_traits> {
 	static inline type append(pref box, vec3a::pref point);
 	//! Append a box to an existing box to return a new box
 	static inline type append(pref box, pref other);
-	//! Set an AABB using center and half-size  
+	//! Set an AABB using center and half-size
 	static inline type set(vec3a::pref center, vec3a::pref extends);
 	//! Set min and max point for AABB
 	static inline type set_min_max(vec3a::pref i_min, vec3a::pref i_max);
@@ -42,7 +42,8 @@ struct aabb : public mat_base<detail::aabb_traits> {
 
 inline bool vml::aabb::is_valid(pref box) {
 #if VML_USE_SSE_AVX
-	return _mm_movemask_epi8(_mm_castps_si128(_mm_cmplt_ps(box.r[1], box.r[0]))) == 0;
+	return _mm_movemask_epi8(
+	           _mm_castps_si128(_mm_cmplt_ps(box.r[1], box.r[0]))) == 0;
 #else
 	for (int i = 0; i < 3; ++i)
 		if (box.r[1][i] < box.r[0][i])

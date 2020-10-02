@@ -14,10 +14,10 @@ struct irect_traits {
 	using row_tag  = ivec2;
 	using scalar_type = int;
 
-	enum { element_count = 8 };
-	enum { row_count = 2 };
-	enum { column_count = 2 };
+	enum : unsigned int { element_count = 8 };
+	enum : unsigned int { row_count = 2 };
+	enum : unsigned int { column_count = 2 };
 };
 } // namespace detail
 struct irect : public detail::rect_base<detail::irect_traits> {};
-}
+} // namespace vml

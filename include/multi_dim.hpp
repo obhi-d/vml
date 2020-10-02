@@ -11,9 +11,9 @@ template <typename concrete> struct multi_dim {
 	using row_type    = typename concrete::row_type;
 	using row_tag     = typename concrete::row_tag;
 
-	enum { element_count = concrete::element_count };
-	enum { row_count = concrete::row_count };
-	enum { column_count = concrete::column_count };
+	enum : unsigned int { element_count = concrete::element_count };
+	enum : unsigned int { row_count = concrete::row_count };
+	enum : unsigned int { column_count = concrete::column_count };
 
 	static inline bool equals(pref m1, pref m2);
 	static inline row_type row(pref m, std::uint32_t i);
@@ -27,11 +27,13 @@ template <typename concrete> struct multi_dim {
 };
 
 template <typename concrete>
-inline typename multi_dim<concrete>::type multi_dim<concrete>::mul(pref m, scalar_type v) {
+inline typename multi_dim<concrete>::type multi_dim<concrete>::mul(
+    pref m, scalar_type v) {
 	return mul(v, m);
 }
 template <typename concrete>
-inline typename multi_dim<concrete>::type multi_dim<concrete>::mul(scalar_type v, pref m) {
+inline typename multi_dim<concrete>::type multi_dim<concrete>::mul(
+    scalar_type v, pref m) {
 	multi_dim<concrete>::type r;
 	for (std::uint32_t i = 0; i < row_count; ++i)
 		r.r[i] = row_tag::mul(v, row(m, i));

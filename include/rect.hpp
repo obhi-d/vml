@@ -13,9 +13,9 @@ struct rect_traits {
 	using row_tag  = vec2;
 	using scalar_type = float;
 
-	enum { element_count = 8 };
-	enum { row_count = 2 };
-	enum { column_count = 2 };
+	enum : unsigned int { element_count = 8 };
+	enum : unsigned int { row_count = 2 };
+	enum : unsigned int { column_count = 2 };
 };
 
 template <typename traits> struct rect_base : public multi_dim<traits> {

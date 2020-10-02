@@ -12,7 +12,7 @@ struct ivec3_traits {
 	using pref = std::conditional_t<types::is_pref_cref, type const&, type>;
 	using cref = type const&;
 
-	enum { element_count = 3 };
+	enum : unsigned int { element_count = 3 };
 };
 } // namespace detail
 struct ivec3 : public vec_base<detail::ivec3_traits> {};

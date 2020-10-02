@@ -12,9 +12,9 @@ struct mat4_traits {
 	using row_tag     = vec4;
 	using scalar_type = float;
 
-	enum { element_count = 16 };
-	enum { row_count = 4 };
-	enum { column_count = 4 };
+	enum : unsigned int { element_count = 16 };
+	enum : unsigned int { row_count = 4 };
+	enum : unsigned int { column_count = 4 };
 };
 } // namespace detail
 

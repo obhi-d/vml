@@ -14,7 +14,7 @@ template <typename concrete> struct vec_base : public concrete {
 	using cref        = typename concrete::cref;
 	using scalar_type = typename concrete::scalar_type;
 	using row_type    = typename concrete::row_type;
-	enum { element_count = concrete::element_count };
+	enum : unsigned int { element_count = concrete::element_count };
 	//! Check if two vectors are equal
 	static inline bool equals(pref v1, pref v2);
 	//! Check if any element of a vector is NAN

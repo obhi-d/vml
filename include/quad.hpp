@@ -12,7 +12,7 @@ struct quad {
 	using scalar_type = float;
 	using row_type    = float;
 
-	enum { element_count = 4 };
+	enum : unsigned int { element_count = 4 };
 
 	static inline bool equals(quad::pref v1, quad::pref v2);
 	static inline bool isnan(pref v);
@@ -148,8 +148,9 @@ inline quad::type quad::isinfv(quad::pref v) {
 }
 
 inline bool quad::isnegative_x(pref q) {
-#if VML_USE_SSE_AVX	
-	return _mm_cvtsi128_si32(vml_cast_v_to_i(_mm_cmpgt_ss(_mm_set_ps1(0.0f), q))) != 0;
+#if VML_USE_SSE_AVX
+	return _mm_cvtsi128_si32(
+	           vml_cast_v_to_i(_mm_cmpgt_ss(_mm_set_ps1(0.0f), q))) != 0;
 #else
 	return q[0] < 0.0f;
 #endif
@@ -157,8 +158,7 @@ inline bool quad::isnegative_x(pref q) {
 
 inline bool quad::isgreater_x(pref q1, pref q2) {
 #if VML_USE_SSE_AVX
-	return _mm_cvtsi128_si32(
-	           vml_cast_v_to_i(_mm_cmpgt_ss(q1, q2))) != 0;
+	return _mm_cvtsi128_si32(vml_cast_v_to_i(_mm_cmpgt_ss(q1, q2))) != 0;
 #else
 	return q1[0] > q2[0];
 #endif
@@ -166,8 +166,7 @@ inline bool quad::isgreater_x(pref q1, pref q2) {
 
 inline bool quad::islesser_x(pref q1, pref q2) {
 #if VML_USE_SSE_AVX
-	return _mm_cvtsi128_si32(
-	           vml_cast_v_to_i(_mm_cmplt_ss(q1, q2))) != 0;
+	return _mm_cvtsi128_si32(vml_cast_v_to_i(_mm_cmplt_ss(q1, q2))) != 0;
 #else
 	return q1[0] < q2[0];
 #endif
@@ -699,7 +698,7 @@ inline quad::type quad::vdot(quad::pref vec1, quad::pref vec2) {
 #if VML_USE_SSE_LEVEL >= 4
 	return _mm_dp_ps(vec1, vec2, 0xFF);
 #elif VML_USE_SSE_LEVEL >= 3
-	__m128 v = _mm_mul_ps(vec1, vec2);
+	__m128 v    = _mm_mul_ps(vec1, vec2);
 	__m128 shuf = _mm_movehdup_ps(v); // broadcast elements 3,1 to 2,0
 	__m128 sums = _mm_add_ps(v, shuf);
 	shuf        = _mm_movehl_ps(shuf, sums); // high half -> low half
@@ -736,8 +735,8 @@ inline quad::type quad::normalize(quad::pref vec) {
 	return _mm_div_ps(vec, q);
 #else
 	type q = vdot(vec, vec);
-	q = _mm_sqrt_ss(q);
-	q = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
+	q      = _mm_sqrt_ss(q);
+	q      = _mm_shuffle_ps(q, q, _MM_SHUFFLE(0, 0, 0, 0));
 	return _mm_div_ps(vec, q);
 #endif
 #else
@@ -767,16 +766,17 @@ inline quad::scalar_type quad::sqdistance(quad::pref vec1, quad::pref vec2) {
 	return quad::sqlength(quad::sub(vec1, vec2));
 }
 inline quad::type quad::half(pref a) { return mul(a, 0.5f); }
-inline quad::type quad::set_000w(pref a, std::uint8_t select) { 
-#if VML_USE_SSE_AVX	
+inline quad::type quad::set_000w(pref a, std::uint8_t select) {
+#if VML_USE_SSE_AVX
 	switch (select) {
-	case 0: 
-		 return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 0)), VML_CLEAR_XYZ_VEC);
-	case 1:
-		return _mm_and_ps(_mm_movelh_ps(a, a),
+	case 0:
+		return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 0)),
 		                  VML_CLEAR_XYZ_VEC);
+	case 1:
+		return _mm_and_ps(_mm_movelh_ps(a, a), VML_CLEAR_XYZ_VEC);
 	case 2:
-		return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 2, 1, 0)), VML_CLEAR_XYZ_VEC);
+		return _mm_and_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 2, 1, 0)),
+		                  VML_CLEAR_XYZ_VEC);
 	case 3:
 		return _mm_and_ps(a, VML_CLEAR_XYZ_VEC);
 	}
@@ -786,8 +786,8 @@ inline quad::type quad::set_000w(pref a, std::uint8_t select) {
 	return {0, 0, 0, a[select]};
 #endif
 }
-inline quad::type quad::set_111w(pref a, std::uint8_t select) { 
-#if VML_USE_SSE_AVX	
+inline quad::type quad::set_111w(pref a, std::uint8_t select) {
+#if VML_USE_SSE_AVX
 	return _mm_or_ps(_mm_set_ps(0.0f, 1.0f, 1.0f, 1.0f), set_000w(a, select));
 #else
 	return {1.0, 1.0, 1.0, a[select]};

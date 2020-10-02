@@ -6,17 +6,17 @@
 namespace vml {
 namespace detail {
 struct mat3_traits {
-	using type     = vml::types::mat3_t<float>;
-	using ref      = type&;
-	using pref     = type const&;
-	using cref     = type const&;
-	using row_type = vml::types::vec4_t<float>;
-	using row_tag  = vec4;
+	using type        = vml::types::mat3_t<float>;
+	using ref         = type&;
+	using pref        = type const&;
+	using cref        = type const&;
+	using row_type    = vml::types::vec4_t<float>;
+	using row_tag     = vec4;
 	using scalar_type = float;
 
-	enum { element_count = 12 };
-	enum { row_count = 3 };
-	enum { column_count = 4 };
+	enum : unsigned int { element_count = 12 };
+	enum : unsigned int { row_count = 3 };
+	enum : unsigned int { column_count = 4 };
 };
 } // namespace detail
 
@@ -25,12 +25,10 @@ struct mat3 : public mat_base<detail::mat3_traits> {
 	using typename mat_base<detail::mat3_traits>::type;
 	using typename mat_base<detail::mat3_traits>::pref;
 
-
 	static inline type transpose(pref m);
 	// @brief Create a rotation matrix from quaternion
 	static inline type from_quat(quat::pref rot);
 	static inline type from_rotation(quat::pref rot);
-
 };
 
 inline mat3::type mat3::transpose(pref m) {
@@ -64,8 +62,6 @@ inline mat3::type mat3::from_quat(quat::pref rot) {
 	return ret;
 }
 
-inline mat3::type mat3::from_rotation(quat::pref rot) {
-	return from_quat(rot);
-}
+inline mat3::type mat3::from_rotation(quat::pref rot) { return from_quat(rot); }
 
 } // namespace vml
