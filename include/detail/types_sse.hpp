@@ -12,7 +12,7 @@ template <typename scalar_t> struct quad_type {
 	using type = std::array<scalar_t, 4>;
 };
 template <> struct quad_type<float> { using type = __m128; };
-template <> struct quad_type<std::int32_t> { using type = __m128i; };
+//template <> struct quad_type<std::int32_t> { using type = __m128i; };
 
 template <typename scalar_t> using quad_t  = typename quad_type<scalar_t>::type;
 template <typename scalar_t> using vec2_t  = std::array<scalar_t, 2>;

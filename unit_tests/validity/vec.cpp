@@ -47,3 +47,11 @@ TEST_CASE("Validate vec3a::mul", "[vec3a::mul]") {
     vml::vec3a_t expected = vml::vec3a::set(-15.2f, 4.56f, -1.08f);
     CHECK(vml::vec3a::equals(expected, vml::vec3a::mul(v, m)));
 }
+
+TEST_CASE("Validate ivec4", "[ivec4]") {
+	vml::ivec4_t m = {
+	    1, 4, 5,  3
+	};
+	auto m2 = vml::ivec4::add(m, m);
+	CHECK(vml::ivec4::equals(vml::ivec4_t{2, 8, 10, 6}, m2));
+}
