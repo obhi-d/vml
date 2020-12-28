@@ -30,11 +30,13 @@ template <typename traits> struct rect_base : public multi_dim<traits> {
 		return {row_type{left, top}, row_type{right, bottom}};
 	}
 	static inline row_type half_size(pref box) {
-		return row_tag::half(row_tag::sub(box[1], box[0]));
+		return row_tag::half(row_tag::sub(box.r[1], box.r[0]));
 	}
-	static inline row_type size(pref box) { return row_tag::sub(box[1], box[0]); }
+	static inline row_type size(pref box) {
+		return row_tag::sub(box.r[1], box.r[0]);
+	}
 	static inline row_type center(pref box) {
-		return row_tag::half(row_tag::add(box[1], box[0]));
+		return row_tag::half(row_tag::add(box.r[1], box.r[0]));
 	}
 };
 } // namespace detail
