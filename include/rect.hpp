@@ -38,6 +38,16 @@ template <typename traits> struct rect_base : public multi_dim<traits> {
 	static inline row_type center(pref box) {
 		return row_tag::half(row_tag::add(box.r[1], box.r[0]));
 	}
+	static inline scalar_type left(pref box) { return row_tag::x(box.r[0]);	}
+	static inline scalar_type top(pref box) { return row_tag::y(box.r[0]);	}
+	static inline scalar_type right(pref box) { return row_tag::x(box.r[1]);	}
+	static inline scalar_type bottom(pref box) { return row_tag::y(box.r[1]);	}
+	static inline scalar_type width(pref box) {
+		return row_tag::x(box.r[1]) - row_tag::x(box.r[0]);
+	}
+	static inline scalar_type height(pref box) {
+		return row_tag::y(box.r[1]) - row_tag::y(box.r[0]);
+	}
 };
 } // namespace detail
 
