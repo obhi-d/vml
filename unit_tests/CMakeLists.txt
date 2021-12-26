@@ -1,5 +1,5 @@
 
-project(cpphash_general_tests)
+project(vml_general_tests)
   
 include(FetchContent)
 
