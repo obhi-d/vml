@@ -1,20 +1,16 @@
 
 project(cpphash_general_tests)
   
-include(ExternalProject)
+include(FetchContent)
 
-ExternalProject_Add(Catch2
-#  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/Catch2"
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/Catch2
-  STEP_TARGETS install 
-  CMAKE_ARGS 
-  	-DCMAKE_INSTALL_PREFIX=${CMAKE_SOURCE_DIR}/out/external/install
-		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-		-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}
-		-DCATCH_BUILD_TESTING=OFF
+
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG origin/v2.x
 )
 
+FetchContent_MakeAvailable(Catch2)
 
 ## Basic tests
 macro(validity_test test_name definitions compile_flags link_options)
@@ -35,9 +31,8 @@ macro(validity_test test_name definitions compile_flags link_options)
     validity/main.cpp
     )
   add_test(validity-${test_name} vmltest-validity-${test_name})
-  add_dependencies(vmltest-validity-${test_name} Catch2-install)
-  target_include_directories(vmltest-validity-${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/out/external/install/include")
-  target_include_directories(vmltest-validity-${test_name} PRIVATE "${CMAKE_SOURCE_DIR}/include")
+  target_link_libraries(vmltest-validity-${test_name} vml::vml)
+  target_link_libraries(vmltest-validity-${test_name} Catch2::Catch2)
   target_compile_definitions(vmltest-validity-${test_name} PRIVATE ${definitions})
   target_compile_options(vmltest-validity-${test_name} PRIVATE ${compile_flags})
   target_compile_features(vmltest-validity-${test_name} PRIVATE cxx_std_17)

@@ -15,6 +15,8 @@ option(VML_BUILD_DOCS "Build documentation" ON)
 set(VML_TARGET_NAME               ${PROJECT_NAME})
 set(VML_INCLUDE_BUILD_DIR "${PROJECT_SOURCE_DIR}/include")
 
+include(GNUInstallDirs)
+
 if(VML_USE_SSE_AVX)
   set(VML_USE_SSE_AVX 1)
 else(VML_USE_SSE_AVX)
@@ -52,7 +54,7 @@ target_compile_definitions(
 target_include_directories(
     ${VML_TARGET_NAME}
     INTERFACE $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
 )
 
 ##
@@ -79,23 +81,22 @@ write_basic_package_version_file("${PROJECT_NAME}ConfigVersion.cmake"
                                  VERSION ${PROJECT_VERSION}
                                  COMPATIBILITY SameMajorVersion)
 
-if(DEFINED CMAKE_INSTALL_DATAROOTDIR)
-    configure_package_config_file(
+
+configure_package_config_file(
     "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
     "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION
-    ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
+      cmake)
 
 
-    install(EXPORT ${PROJECT_NAME}_Targets
+install(EXPORT ${PROJECT_NAME}_Targets
     FILE ${PROJECT_NAME}Targets.cmake
     NAMESPACE ${PROJECT_NAME}::
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
+    DESTINATION cmake)
 
-    install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
-endif()
+install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+              "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+              DESTINATION cmake)
 
 find_package(Doxygen)
 if (VML_BUILD_DOCS)
@@ -124,4 +125,4 @@ if (CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
 endif()
 endif(VML_BUILD_DOCS)
 
-install(DIRECTORY include DESTINATION .)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
