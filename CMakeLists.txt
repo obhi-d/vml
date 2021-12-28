@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 project(vml VERSION 0.0.1 LANGUAGES CXX)
-
+set(CMAKE_CXX_STANDARD 17)
 
 option(VML_BUILD_TESTS "Build the unit tests when BUILD_TESTING is enabled." ON)
 option(VML_USE_SSE_AVX "Use SSE and AVX instructions" ON)
@@ -44,7 +44,6 @@ endif(VML_PREFER_SPEED_OVER_ACCURACY)
 message("Target name: ${VML_TARGET_NAME}")
 add_library(${VML_TARGET_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${VML_TARGET_NAME} ALIAS ${VML_TARGET_NAME})
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
 target_compile_definitions(
     ${VML_TARGET_NAME}
