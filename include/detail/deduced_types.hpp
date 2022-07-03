@@ -4,7 +4,8 @@
 #include "types_sse.hpp"
 #include "vml_fcn.hpp"
 
-namespace vml {
+namespace vml
+{
 #if VML_USE_SSE_AVX
 namespace types = vml::sse_types;
 #else

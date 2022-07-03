@@ -1,0 +1,5 @@
+# Macro file
+.*/_Config.hxx
+
+# Submodules
+submodules/*
