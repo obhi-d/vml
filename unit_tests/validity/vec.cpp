@@ -13,9 +13,11 @@ TEST_CASE("Validate vec3::cross", "[vec3::cross]")
 
 TEST_CASE("Validate vec3a::compare", "[vec3a::compare]")
 {
-  vml::vec3a_t p = vml::vec3a::set(-441.3f, 23.0f, -1.0f);
-  vml::vec3a_t q = vml::vec3a::set(441.3f, 5.0f, 51.0f);
-  vml::vec3a_t r = vml::vec3a::set(445.3f, 15.0f, 151.0f);
+  vml::vec3a_t p    = vml::vec3a::set(-441.3f, 23.0f, -1.0f);
+  auto         copy = p;
+  vml::vec3a_t q    = vml::vec3a::set(441.3f, 5.0f, 51.0f);
+  vml::vec3a_t r    = vml::vec3a::set(445.3f, 15.0f, 151.0f);
+  CHECK(p == copy);
   CHECK(vml::vec3a::greater_any(p, q));
   CHECK(vml::vec3a::greater_all(p, q) == false);
   CHECK(vml::vec3a::lesser_any(p, q));
@@ -53,6 +55,8 @@ TEST_CASE("Validate vec3a::mul", "[vec3a::mul]")
 TEST_CASE("Validate ivec4", "[ivec4]")
 {
   vml::ivec4_t m  = {1, 4, 5, 3};
+  auto         c  = m;
   auto         m2 = vml::ivec4::add(m, m);
+  CHECK(m == c);
   CHECK(vml::ivec4::equals(vml::ivec4_t{2, 8, 10, 6}, m2));
 }

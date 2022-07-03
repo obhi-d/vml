@@ -45,7 +45,7 @@ struct rect_t
   rect_t(RowType... args) : m{args...}
   {}
 
-  inline auto operator<=>(rect_t const& other) const noexcept
+  inline constexpr auto operator<=>(rect_t const& other) const noexcept
   {
     return m <=> other.m;
   }
@@ -65,7 +65,7 @@ struct aabb_t
   aabb_t(RowType... args) : m{args...}
   {}
 
-  inline auto operator<=>(aabb_t const& other) const noexcept
+  inline constexpr auto operator<=>(aabb_t const& other) const noexcept
   {
     return m <=> other.m;
   }
@@ -88,7 +88,7 @@ struct mat4_t
   mat4_t(ScalarType... args) : m{static_cast<scalar_t>(args)...}
   {}
 
-  inline auto operator<=>(mat4_t const& other) const noexcept
+  inline constexpr auto operator<=>(mat4_t const& other) const noexcept
   {
     return m <=> other.m;
   }
@@ -110,7 +110,7 @@ struct mat3_t
   mat3_t(ScalarType... args) : m{static_cast<scalar_t>(args)...}
   {}
 
-  inline auto operator<=>(mat3_t const& other) const noexcept
+  inline constexpr auto operator<=>(mat3_t const& other) const noexcept
   {
     return m <=> other.m;
   }
