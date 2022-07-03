@@ -35,7 +35,7 @@ macro(validity_test test_name definitions compile_flags link_options)
   target_link_libraries(vmltest-validity-${test_name} Catch2::Catch2)
   target_compile_definitions(vmltest-validity-${test_name} PRIVATE ${definitions})
   target_compile_options(vmltest-validity-${test_name} PRIVATE ${compile_flags})
-  target_compile_features(vmltest-validity-${test_name} PRIVATE cxx_std_17)
+  target_compile_features(vmltest-validity-${test_name} PRIVATE cxx_std_20)
   target_link_options(vmltest-validity-${test_name} PRIVATE ${link_options})
 endmacro()
 

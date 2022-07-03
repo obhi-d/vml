@@ -44,6 +44,7 @@ endif(VML_PREFER_SPEED_OVER_ACCURACY)
 message("Target name: ${VML_TARGET_NAME}")
 add_library(${VML_TARGET_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${VML_TARGET_NAME} ALIAS ${VML_TARGET_NAME})
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
 target_compile_definitions(
     ${VML_TARGET_NAME}
